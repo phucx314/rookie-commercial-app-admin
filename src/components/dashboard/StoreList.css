@@ -1,0 +1,212 @@
+.store-list-container {
+  min-width: 300px;
+  padding: 20px;
+  background-color: var(--background-color);
+}
+
+.store-list-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 32px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.store-list-header h2 {
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-color);
+  margin: 0;
+  letter-spacing: -0.5px;
+}
+
+.store-filters {
+  display: flex;
+  gap: 12px;
+}
+
+.store-filters button {
+  padding: var(--spacing-xs) var(--spacing-md);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-xl);
+  background: var(--card-background);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  font-family: var(--font-family);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+  color: var(--text-color);
+}
+
+.store-filters button:hover {
+  border-color: var(--text-color);
+  background: var(--hover-background);
+}
+
+.store-filters button.active {
+  background: var(--text-color);
+  color: var(--background-color);
+  border-color: var(--text-color);
+}
+
+.store-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 20px;
+}
+
+.store-card {
+  background: var(--card-background);
+  border-radius: 16px;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  border: 1px solid var(--border-color);
+  transition: transform 0.2s ease;
+  min-width: 200px;
+}
+
+.store-card:hover {
+  transform: translateY(-2px);
+}
+
+.store-logo {
+  width: 80px;
+  height: 80px;
+  position: relative;
+  margin-bottom: 16px;
+}
+
+.store-logo-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 12px;
+}
+
+.store-logo-fallback {
+  width: 100%;
+  height: 100%;
+  background: #1a1a1a;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 28px;
+  font-weight: var(--font-weight-semibold);
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: none;
+  letter-spacing: -0.5px;
+}
+
+.store-logo:not(:has(img)), 
+.store-logo:has(img[style*="display: none"]) .store-logo-fallback {
+  display: flex;
+}
+
+.store-name {
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-semibold);
+  margin: 0 0 4px 0;
+  color: var(--text-color);
+  letter-spacing: -0.3px;
+}
+
+.store-address {
+  font-size: var(--font-size-xs);
+  color: var(--text-color);
+  opacity: 0.7;
+  margin: 0 0 24px 0;
+  font-weight: var(--font-weight-normal);
+  line-height: 1.4;
+}
+
+.store-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  width: 100%;
+  margin-bottom: 24px;
+  padding: 16px 0;
+  border-top: 1px solid var(--border-color);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.stat-item {
+  text-align: center;
+}
+
+.stat-label {
+  font-size: var(--font-size-xs);
+  color: var(--text-color);
+  opacity: 0.7;
+  margin-bottom: 4px;
+  font-weight: var(--font-weight-medium);
+}
+
+.stat-value {
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-color);
+  letter-spacing: -0.3px;
+}
+
+.store-actions {
+  display: flex;
+  gap: 12px;
+  width: 100%;
+}
+
+.view-details-btn,
+.edit-store-btn {
+  flex: 1;
+  padding: var(--spacing-md) var(--spacing-md);
+  border: none;
+  border-radius: var(--border-radius-md);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  font-family: var(--font-family);
+}
+
+.view-details-btn {
+  background: var(--text-color);
+  color: var(--background-color);
+}
+
+.edit-store-btn {
+  background: var(--background-color);
+  color: var(--text-color);
+  border: 1px solid var(--border-color);
+}
+
+.view-details-btn:hover,
+.edit-store-btn:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+.view-details-btn:active,
+.edit-store-btn:active {
+  transform: translateY(0);
+}
+
+.loading, .error {
+  text-align: center;
+  padding: var(--spacing-2xl);
+  font-size: var(--font-size-xs);
+  color: var(--text-color);
+  opacity: 0.7;
+  font-weight: var(--font-weight-medium);
+}
+
+.error {
+  color: #dc3545;
+} 

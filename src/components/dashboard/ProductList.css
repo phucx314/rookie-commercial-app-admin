@@ -1,0 +1,311 @@
+.product-list {
+  padding: var(--spacing-md);
+}
+
+.product-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--spacing-lg);
+}
+
+.product-header h1 {
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-color);
+  margin: 0;
+}
+
+.add-product-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  padding: var(--button-padding);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+  color: var(--background-color);
+  background-color: var(--text-color);
+  border: 1px solid transparent;
+  border-radius: var(--border-radius-md);
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  transition: all var(--transition-fast);
+  cursor: pointer;
+}
+
+.add-product-btn:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+.add-product-btn:active {
+  transform: translateY(0);
+}
+
+.add-product-btn svg {
+  width: var(--icon-size-sm);
+  height: var(--icon-size-sm);
+}
+
+.products-table-container {
+  width: 100%;
+  overflow-x: auto;
+  background: var(--card-background);
+  border-radius: var(--border-radius-lg);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.products-table {
+  width: 100%;
+  min-width: 1000px;
+  border-collapse: collapse;
+}
+
+.products-table th {
+  background: var(--background-color);
+  color: var(--text-color);
+  font-weight: var(--font-weight-semibold);
+  padding: var(--table-cell-padding);
+  text-align: left;
+  border-bottom: 1px solid var(--border-color);
+  font-size: var(--font-size-xs);
+}
+
+.products-table td {
+  padding: var(--table-cell-padding);
+  border-bottom: 1px solid var(--border-color);
+  color: var(--text-color);
+  font-size: var(--font-size-xs);
+}
+
+.products-table tr:hover {
+  background: var(--hover-background);
+}
+
+.products-table .store-name {
+  color: var(--text-color);
+  opacity: 0.7;
+}
+
+.products-table .action-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+.products-table .edit-btn,
+.products-table .delete-btn {
+  padding: 6px 12px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.2s;
+}
+
+.products-table .edit-btn {
+  background: var(--text-color);
+  color: var(--background-color);
+}
+
+.products-table .delete-btn {
+  background: var(--text-color);
+  color: var(--background-color);
+}
+
+.products-table .edit-btn:hover,
+.products-table .delete-btn:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+.products-table .edit-btn:active,
+.products-table .delete-btn:active {
+  transform: translateY(0);
+}
+
+.product-image {
+  width: 40px;
+  height: 40px;
+  object-fit: cover;
+  border-radius: var(--border-radius-sm);
+}
+
+.store-name {
+  font-weight: var(--font-weight-medium);
+  color: var(--text-color);
+}
+
+.product-actions {
+  display: flex;
+  gap: var(--spacing-xs);
+}
+
+.product-actions button {
+  padding: var(--spacing-xs);
+  border: none;
+  border-radius: var(--border-radius-sm);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition-fast);
+}
+
+.product-actions button.edit-btn {
+  background-color: var(--hover-background);
+  color: var(--text-color);
+}
+
+.product-actions button.delete-btn {
+  background-color: var(--hover-background);
+  color: var(--text-color);
+}
+
+.product-actions button svg {
+  width: var(--icon-size-sm);
+  height: var(--icon-size-sm);
+}
+
+.rating {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  color: #f59e0b;
+}
+
+.star-icon {
+  width: var(--icon-size-sm);
+  height: var(--icon-size-sm);
+}
+
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: var(--z-index-modal);
+}
+
+.modal-content {
+  background: var(--card-background);
+  padding: var(--spacing-lg);
+  border-radius: var(--border-radius-lg);
+  width: 100%;
+  max-width: 500px;
+}
+
+.modal-content h2 {
+  color: var(--text-color);
+  margin-bottom: var(--spacing-md);
+  font-size: var(--font-size-md);
+}
+
+.modal-content input,
+.modal-content textarea,
+.modal-content select {
+  width: 100%;
+  padding: var(--input-padding);
+  /* margin-bottom: var(--spacing-md); */
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-md);
+  background: var(--background-color);
+  color: var(--text-color);
+  font-size: var(--font-size-xs);
+}
+
+.modal-content textarea {
+  min-height: 100px;
+  resize: vertical;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--spacing-md);
+  margin-top: var(--spacing-md);
+}
+
+.modal-actions button {
+  padding: var(--button-padding);
+  border-radius: var(--border-radius-md);
+  cursor: pointer;
+  font-size: var(--font-size-xs);
+}
+
+.modal-actions button:first-child {
+  background: var(--hover-background);
+  border: 1px solid var(--border-color);
+  color: var(--text-color);
+}
+
+.modal-actions button:last-child {
+  background: var(--text-color);
+  color: var(--background-color);
+  border: none;
+}
+
+.sortable {
+  cursor: pointer;
+  user-select: none;
+  position: relative;
+  padding-right: 24px !important;
+}
+
+.sortable:hover {
+  background-color: var(--hover-background);
+}
+
+.sort-icon {
+  width: var(--icon-size-sm);
+  height: var(--icon-size-sm);
+  position: absolute;
+  right: 4px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-color);
+  opacity: 0.5;
+}
+
+.sort-icon.active {
+  color: var(--text-color);
+  opacity: 1;
+}
+
+.date-column {
+  white-space: nowrap;
+  font-family: monospace;
+  color: var(--text-color);
+  opacity: 0.7;
+  font-size: var(--font-size-xs);
+}
+
+.price-column {
+  font-weight: var(--font-weight-medium);
+  color: var(--text-color);
+  font-family: monospace;
+  white-space: nowrap;
+}
+
+/* Thêm thanh scroll tùy chỉnh */
+.products-table-container::-webkit-scrollbar {
+  height: 8px;
+}
+
+.products-table-container::-webkit-scrollbar-track {
+  background: var(--background-color);
+  border-radius: 4px;
+}
+
+.products-table-container::-webkit-scrollbar-thumb {
+  background: var(--hover-background);
+  border-radius: 4px;
+  opacity: 0.5;
+}
+
+.products-table-container::-webkit-scrollbar-thumb:hover {
+  opacity: 0.7;
+} 

@@ -1,0 +1,131 @@
+.sidebar {
+  width: var(--sidebar-width);
+  height: 100vh;
+  background: var(--sidebar-background);
+  border-right: 1px solid var(--border-color);
+  position: fixed;
+  left: 0;
+  top: 0;
+}
+
+.sidebar-content {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.logo {
+  padding: 24px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.logo a {
+  display: flex;
+  align-items: center;
+  text-decoration: none;
+  color: var(--text-color);
+}
+
+.logo img {
+  width: 32px;
+  height: 32px;
+  margin-right: 12px;
+}
+
+.logo span {
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: -0.5px;
+}
+
+.menu {
+  padding: var(--spacing-lg) var(--spacing-md);
+  flex: 1;
+}
+
+.menu-item {
+  display: flex;
+  align-items: center;
+  padding: var(--spacing-md) var(--spacing-md);
+  color: var(--text-color);
+  opacity: 0.7;
+  text-decoration: none;
+  border-radius: var(--border-radius-lg);
+  margin-bottom: 4px;
+  transition: all var(--transition-fast);
+  font-size: var(--font-size-md);
+}
+
+.menu-item:hover {
+  background: var(--hover-background);
+  opacity: 1;
+}
+
+.menu-item.active {
+  background: var(--text-color);
+  color: var(--background-color);
+  opacity: 1;
+}
+
+.menu-icon {
+  width: var(--icon-size-sm);
+  height: var(--icon-size-sm);
+  margin-right: var(--spacing-xs);
+}
+
+.user-section {
+  padding: var(--spacing-lg);
+  border-top: 1px solid var(--border-color);
+}
+
+.user-info {
+  margin-bottom: 16px;
+}
+
+.user-email {
+  font-size: var(--font-size-md);
+  color: var(--text-color);
+  margin-bottom: 4px;
+  font-weight: var(--font-weight-medium);
+}
+
+.user-role {
+  font-size: var(--font-size-md);
+  color: var(--text-color);
+  opacity: 0.7;
+}
+
+.theme-switch-container {
+  margin-bottom: 16px;
+  padding: 8px 0;
+  border-top: 1px solid var(--border-color);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.logout-button {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  padding: var(--spacing-md) var(--spacing-sm);
+  border: none;
+  background: none;
+  color: var(--text-color);
+  opacity: 0.7;
+  cursor: pointer;
+  border-radius: var(--border-radius-md);
+  transition: all var(--transition-fast);
+  font-family: var(--font-family);
+  font-size: var(--font-size-md);
+}
+
+.logout-button:hover {
+  background: var(--hover-background);
+  color: #dc3545;
+  opacity: 1;
+}
+
+.logout-icon {
+  width: var(--icon-size-sm);
+  height: var(--icon-size-sm);
+  margin-right: var(--spacing-xs);
+} 
