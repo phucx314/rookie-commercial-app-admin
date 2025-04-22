@@ -1,125 +1,69 @@
 import React, { useState, useEffect } from "react";
-import axios from "../../api/axios";
 import {
   CurrencyDollarIcon,
   ShoppingBagIcon,
   UserGroupIcon,
   BuildingStorefrontIcon,
 } from "@heroicons/react/24/outline";
+import dashboardService from "../../services/dashboard.service";
 import "./Dashboard.css";
 
 const Dashboard = () => {
-  const [products, setProducts] = useState([]);
-  const [orders, setOrders] = useState([]);
-  const [stores, setStores] = useState([]);
-  const [categories, setCategories] = useState([]);
+  const [dashboardData, setDashboardData] = useState({
+    products: [],
+    orders: [],
+    stores: [],
+    categories: []
+  });
+  const [stats, setStats] = useState({});
+  const [topStores, setTopStores] = useState([]);
+  const [topProducts, setTopProducts] = useState([]);
+  const [topCategories, setTopCategories] = useState([]);
 
   useEffect(() => {
-    fetchData();
+    fetchDashboardData();
   }, []);
 
-  const fetchData = async () => {
+  const fetchDashboardData = async () => {
     try {
-      const [productsRes, ordersRes, storesRes, categoriesRes] =
-        await Promise.all([
-          axios.get("/Product"),
-          axios.get("/Order"),
-          axios.get("/Store"),
-          axios.get("/Category"),
-        ]);
+      const data = await dashboardService.getDashboardData();
+      setDashboardData(data);
 
-      // console.log("Orders data:", ordersRes.data);
+      const calculatedStats = dashboardService.calculateStats(data.products, data.orders);
+      setStats({
+        totalProducts: {
+          ...calculatedStats.totalProducts,
+          icon: ShoppingBagIcon,
+          label: "Total Products",
+          sublabel: "products / quantity",
+        },
+        totalValue: {
+          value: calculatedStats.totalValue,
+          icon: CurrencyDollarIcon,
+          label: "Total Value",
+          sublabel: "inventory value",
+        },
+        totalCustomers: {
+          count: calculatedStats.totalCustomers,
+          icon: UserGroupIcon,
+          label: "Total Customers",
+          sublabel: "customers who purchased",
+        },
+        totalRevenue: {
+          value: calculatedStats.totalRevenue,
+          icon: BuildingStorefrontIcon,
+          label: "Total Revenue",
+          sublabel: "from all stores",
+        },
+      });
 
-      setProducts(productsRes.data);
-      setOrders(ordersRes.data);
-      setStores(storesRes.data);
-      setCategories(categoriesRes.data);
+      setTopStores(dashboardService.getTopStores(data.stores, data.orders, data.products));
+      setTopProducts(dashboardService.getTopProducts(data.products, data.orders));
+      setTopCategories(dashboardService.getTopCategories(data.categories, data.orders, data.products));
     } catch (error) {
       console.error("Error fetching dashboard data:", error);
     }
   };
-
-  // Tính toán các thống kê
-  const stats = {
-    totalProducts: {
-      count: products.length,
-      quantity: products.reduce((sum, p) => sum + p.stockQuantity, 0),
-      icon: ShoppingBagIcon,
-      label: "Total Products",
-      sublabel: "products / quantity",
-    },
-    totalValue: {
-      value: products.reduce((sum, p) => sum + p.price * p.stockQuantity, 0),
-      icon: CurrencyDollarIcon,
-      label: "Total Value",
-      sublabel: "inventory value",
-    },
-    totalCustomers: {
-      count: [...new Set(orders.map((o) => o.customerId))].length,
-      icon: UserGroupIcon,
-      label: "Total Customers",
-      sublabel: "customers who purchased",
-    },
-    totalRevenue: {
-      value: orders.reduce((sum, order) => {
-        const orderTotal = order.orderItems.reduce((itemSum, item) => {
-          return itemSum + item.price * item.quantity;
-        }, 0);
-        return sum + orderTotal;
-      }, 0),
-      icon: BuildingStorefrontIcon,
-      label: "Total Revenue",
-      sublabel: "from all stores",
-    },
-  };
-
-  // Tính toán bảng xếp hạng
-  const topStores = stores
-    .map((store) => ({
-      ...store,
-      revenue: orders
-        .filter((o) => o.status === 3 && o.paymentStatus === 1)
-        .reduce((sum, order) => {
-          // Chỉ tính các order items có product thuộc về store này
-          const storeOrderItems = order.orderItems.filter(
-            (item) =>
-              products.find((p) => p.id === item.productId)?.storeId ===
-              store.id
-          );
-          const orderTotal = storeOrderItems.reduce((itemSum, item) => {
-            return itemSum + item.price * item.quantity;
-          }, 0);
-          return sum + orderTotal;
-        }, 0),
-    }))
-    .sort((a, b) => b.revenue - a.revenue)
-    .slice(0, 3);
-
-  const topProducts = products
-    .map((product) => ({
-      ...product,
-      revenue: orders
-        .flatMap((o) => o.orderItems)
-        .filter((item) => item.productId === product.id)
-        .reduce((sum, item) => sum + item.price * item.quantity, 0),
-    }))
-    .sort((a, b) => b.revenue - a.revenue)
-    .slice(0, 3);
-
-  const topCategories = categories
-    .map((category) => ({
-      ...category,
-      soldQuantity: orders
-        .flatMap((o) => o.orderItems)
-        .filter(
-          (item) =>
-            products.find((p) => p.id === item.productId)?.categoryId ===
-            category.id
-        )
-        .reduce((sum, item) => sum + item.quantity, 0),
-    }))
-    .sort((a, b) => b.soldQuantity - a.soldQuantity)
-    .slice(0, 3);
 
   const formatCurrency = (value) => {
     return new Intl.NumberFormat("vi-VN", {
@@ -213,4 +157,4 @@ const Dashboard = () => {
   );
 };
 
-export default Dashboard;
+export default Dashboard; 

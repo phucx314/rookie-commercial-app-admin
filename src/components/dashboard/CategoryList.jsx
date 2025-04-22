@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import axios from '../../api/axios';
 import { PlusIcon, PencilIcon, TrashIcon, ChevronUpIcon, ChevronDownIcon } from '@heroicons/react/24/outline';
+import categoryService from '../../services/category.service';
 import './CategoryList.css';
 
 const CategoryList = () => {
@@ -21,8 +21,8 @@ const CategoryList = () => {
 
   const fetchCategories = async () => {
     try {
-      const response = await axios.get('/Category');
-      setCategories(response.data);
+      const data = await categoryService.getAllCategories();
+      setCategories(data);
     } catch (error) {
       console.error('Error fetching categories:', error);
     }
@@ -30,7 +30,7 @@ const CategoryList = () => {
 
   const handleCreateCategory = async () => {
     try {
-      await axios.post('/Category', newCategory);
+      await categoryService.createCategory(newCategory);
       setIsModalOpen(false);
       setNewCategory({
         name: '',
@@ -45,7 +45,7 @@ const CategoryList = () => {
 
   const handleUpdateCategory = async (id, updatedData) => {
     try {
-      await axios.put(`/Category/${id}`, updatedData);
+      await categoryService.updateCategory(id, updatedData);
       setIsEditModalOpen(false);
       setSelectedCategory(null);
       fetchCategories();
@@ -57,7 +57,7 @@ const CategoryList = () => {
   const handleDeleteCategory = async (id) => {
     if (window.confirm('Are you sure you want to delete this category?')) {
       try {
-        await axios.delete(`/Category/${id}`);
+        await categoryService.deleteCategory(id);
         fetchCategories();
       } catch (error) {
         console.error('Error deleting category:', error);
@@ -134,9 +134,7 @@ const CategoryList = () => {
       <div className="category-header">
         <h1>Categories</h1>
         <button className="add-category-btn" onClick={() => setIsModalOpen(true)}>
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-          </svg>
+          <PlusIcon />
           Add Category
         </button>
       </div>

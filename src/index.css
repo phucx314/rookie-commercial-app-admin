@@ -16,13 +16,13 @@
   --font-size-3xl: 1.125rem;   /* 18px */
   
   /* Spacing */
-  --spacing-xs: 0.25rem;   /* 4px */
-  --spacing-sm: 0.5rem;    /* 8px */
-  --spacing-md: 0.75rem;   /* 12px */
-  --spacing-lg: 1rem;      /* 16px */
-  --spacing-xl: 1.25rem;   /* 20px */
-  --spacing-2xl: 1.5rem;   /* 24px */
-  --spacing-3xl: 2rem;     /* 32px */
+  --spacing-xs: 0.5rem;        /* 8px */
+  --spacing-sm: 0.75rem;        /* 12px */
+  --spacing-md: 1rem;           /* 16px */
+  --spacing-lg: 1.5rem;         /* 24px */
+  --spacing-xl: 2rem;           /* 32px */
+  --spacing-2xl: 1.5rem;        /* 24px */
+  --spacing-3xl: 2rem;          /* 32px */
   
   /* Border radius */
   --border-radius-sm: 0.25rem;  /* 4px */
@@ -34,14 +34,14 @@
   --header-height: 3.5rem;      /* 56px */
   --sidebar-width: 14rem;       /* 224px */
   --card-padding: 1rem;         /* 16px */
-  --table-cell-padding: 0.375rem 0.5rem; /* 6px 8px */
-  --button-padding: 0.5rem 0.5rem; /* 6px 8px */
-  --input-padding: 0.5rem 0.5rem; /* 6px 8px */
+  --table-cell-padding: 0.75rem 1rem; /* 12px 16px */
+  --button-padding: 0.5rem 1rem; /* 6px 8px */
+  --input-padding: 0.5rem 0.75rem; /* 6px 8px */
   
   /* Icon sizes */
-  --icon-size-sm: 0.875rem;    /* 14px */
-  --icon-size-md: 1rem;        /* 16px */
-  --icon-size-lg: 1.25rem;     /* 20px */
+  --icon-size-sm: 1rem;         /* 16px */
+  --icon-size-md: 1.5rem;        /* 24px */
+  --icon-size-lg: 2rem;          /* 32px */
   
   /* Font weights */
   --font-weight-normal: 400;
@@ -55,7 +55,7 @@
   --line-height-relaxed: 1.75;
   
   /* Transitions */
-  --transition-fast: 150ms;
+  --transition-fast: 0.2s;
   --transition-normal: 200ms;
   --transition-slow: 300ms;
   
@@ -64,7 +64,7 @@
   --z-index-sticky: 1020;
   --z-index-fixed: 1030;
   --z-index-modal-backdrop: 1040;
-  --z-index-modal: 1050;
+  --z-index-modal: 50;
   --z-index-popover: 1060;
   --z-index-tooltip: 1070;
   
@@ -106,3 +106,7 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
 }
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;

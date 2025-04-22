@@ -24,7 +24,7 @@
   background: var(--card-background);
   border-radius: 12px;
   padding: 24px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  border: 1px solid var(--border-color);
   display: flex;
   align-items: flex-start;
   gap: 16px;
@@ -83,7 +83,7 @@
   background: var(--card-background);
   border-radius: 12px;
   padding: 24px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  border: 1px solid var(--border-color);
 }
 
 .ranking-card h3 {
