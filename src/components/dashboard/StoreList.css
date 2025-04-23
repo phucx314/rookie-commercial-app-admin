@@ -21,9 +21,67 @@
   letter-spacing: -0.5px;
 }
 
+.header-actions {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+}
+
 .store-filters {
   display: flex;
   gap: 12px;
+}
+
+/* Search form styles */
+.search-form-inline {
+  display: flex;
+  align-items: center;
+}
+
+.search-input-container {
+  position: relative;
+  min-width: 240px;
+  display: flex;
+  align-items: center;
+}
+
+.search-input {
+  width: 100%;
+  padding: 8px 36px 8px 12px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-xl);
+  background: var(--card-background);
+  font-family: var(--font-family);
+  font-size: var(--font-size-xs);
+  color: var(--text-color);
+  height: 36px;
+}
+
+.search-button-inside {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  height: 24px;
+  width: 24px;
+}
+
+.search-icon {
+  width: 16px;
+  height: 16px;
+  color: var(--text-color);
+  opacity: 0.6;
+}
+
+.search-button-inside:hover .search-icon {
+  opacity: 1;
 }
 
 .store-filters button {
@@ -122,9 +180,23 @@
   font-size: var(--font-size-xs);
   color: var(--text-color);
   opacity: 0.7;
-  margin: 0 0 24px 0;
+  margin: 0 0 8px 0;
   font-weight: var(--font-weight-normal);
   line-height: 1.4;
+}
+
+.store-seller {
+  font-size: var(--font-size-xs);
+  color: var(--text-color);
+  opacity: 0.8;
+  margin: 0 0 24px 0;
+  font-weight: var(--font-weight-medium);
+  line-height: 1.4;
+}
+
+.seller-label {
+  font-weight: var(--font-weight-semibold);
+  margin-right: 4px;
 }
 
 .store-stats {
@@ -166,9 +238,9 @@
 .view-details-btn,
 .edit-store-btn {
   flex: 1;
-  padding: var(--spacing-md) var(--spacing-md);
+  padding: var(--spacing-sm) var(--spacing-md);
   border: none;
-  border-radius: var(--border-radius-md);
+  border-radius: var(--border-radius-lg);
   font-size: var(--font-size-xs);
   font-weight: var(--font-weight-medium);
   cursor: pointer;
@@ -209,4 +281,115 @@
 
 .error {
   color: #dc3545;
+}
+
+/* Pagination Styles */
+.pagination-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 20px;
+  padding: 10px;
+  font-size: var(--font-size-xs);
+  color: var(--text-color);
+}
+
+.page-size-selector {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.page-size-select {
+  padding: 4px 8px;
+  border-radius: var(--border-radius-sm);
+  border: 1px solid var(--border-color);
+  background-color: var(--card-background);
+  color: var(--text-color);
+  font-size: var(--font-size-xs);
+  cursor: pointer;
+}
+
+/* Modal Styles */
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  width: 100%;
+  max-width: 500px;
+  background-color: var(--card-background);
+  padding: 24px;
+  border-radius: var(--border-radius-lg);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.modal-content h2 {
+  margin-top: 0;
+  margin-bottom: 20px;
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-semibold);
+}
+
+.form-group {
+  margin-bottom: 16px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 4px;
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+}
+
+.form-group input,
+.form-group textarea {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-sm);
+  font-size: var(--font-size-xs);
+  background-color: var(--background-color);
+  color: var(--text-color);
+}
+
+.form-group textarea {
+  resize: vertical;
+  min-height: 100px;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 20px;
+}
+
+.modal-actions button {
+  padding: 8px 16px;
+  border: none;
+  border-radius: var(--border-radius-md);
+  font-size: var(--font-size-xs);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.modal-actions button:first-child {
+  background-color: var(--background-color);
+  color: var(--text-color);
+  border: 1px solid var(--border-color);
+}
+
+.modal-actions button:last-child {
+  background-color: var(--text-color);
+  color: var(--background-color);
 } 

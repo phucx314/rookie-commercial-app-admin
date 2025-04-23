@@ -1,12 +1,19 @@
 import React, { useState, useEffect } from 'react';
+import { useSearchParams, useLocation, useNavigate } from 'react-router-dom';
 import { storeService, toastService } from '../../services';
+import Pagination from '../common/Pagination';
+import { MagnifyingGlassIcon } from '@heroicons/react/24/outline';
 import './StoreList.css';
 
 const StoreList = () => {
+    const navigate = useNavigate();
+    const location = useLocation();
+    const [searchParams, setSearchParams] = useSearchParams();
+
     const [stores, setStores] = useState([]);
     const [loading, setLoading] = useState(true);
     const [storeStats, setStoreStats] = useState({});
-    const [activeFilter, setActiveFilter] = useState('all');
+    const [activeFilter, setActiveFilter] = useState(searchParams.get('status') || 'all');
     const [editingStore, setEditingStore] = useState(null);
     const [editForm, setEditForm] = useState({
         name: '',
@@ -16,19 +23,176 @@ const StoreList = () => {
         email: '',
         logoUrl: ''
     });
+    
+    // Pagination states
+    const [pagination, setPagination] = useState({
+        pageIndex: parseInt(searchParams.get('page')) || 1,
+        pageSize: parseInt(searchParams.get('pageSize')) || 12,
+        totalCount: 0,
+        totalPages: 0
+    });
+    
+    // Tìm kiếm
+    const [searchTerm, setSearchTerm] = useState(searchParams.get('search') || '');
+    const [shouldApplySearch, setShouldApplySearch] = useState(!!searchParams.get('search'));
+    const [currentSearchTerm, setCurrentSearchTerm] = useState('');
+
+    // Update URL when filters change
+    useEffect(() => {
+        const params = new URLSearchParams();
+        
+        if (pagination.pageIndex !== 1) {
+            params.set('page', pagination.pageIndex);
+        }
+        
+        if (pagination.pageSize !== 12) {
+            params.set('pageSize', pagination.pageSize);
+        }
+        
+        if (activeFilter !== 'all') {
+            params.set('status', activeFilter);
+        }
+        
+        if (searchTerm) {
+            params.set('search', searchTerm);
+        }
+        
+        // Update URL without causing a navigation/reload
+        setSearchParams(params);
+    }, [pagination.pageIndex, pagination.pageSize, activeFilter, searchTerm, shouldApplySearch, setSearchParams]);
+
+    // Check URL params on mount
+    useEffect(() => {
+        const pageFromUrl = searchParams.get('page');
+        const pageSizeFromUrl = searchParams.get('pageSize');
+        if (pageFromUrl || pageSizeFromUrl) {
+            setPagination(prev => ({
+                ...prev,
+                pageIndex: pageFromUrl ? parseInt(pageFromUrl) : prev.pageIndex,
+                pageSize: pageSizeFromUrl ? parseInt(pageSizeFromUrl) : prev.pageSize
+            }));
+        }
+        
+        const statusFromUrl = searchParams.get('status');
+        if (statusFromUrl) {
+            setActiveFilter(statusFromUrl);
+        }
+
+        const searchFromUrl = searchParams.get('search');
+        if (searchFromUrl) {
+            setSearchTerm(searchFromUrl);
+            setShouldApplySearch(true);
+        }
+    }, []);
 
     useEffect(() => {
-        fetchStores(activeFilter);
-    }, [activeFilter]);
+        fetchPaginatedStores();
+    }, [pagination.pageIndex, pagination.pageSize, activeFilter]);
 
-    const fetchStores = async (filter = 'all') => {
+    // Separate useEffect to handle search
+    useEffect(() => {
+        if (shouldApplySearch) {
+            // Store the current search term for comparison
+            setCurrentSearchTerm(searchTerm);
+            // This will prevent the double fetch by not changing shouldApplySearch yet
+            fetchPaginatedStores(true);
+        }
+    }, [shouldApplySearch]);
+
+    const fetchPaginatedStores = async (isSearchRequest = false) => {
         try {
             setLoading(true);
-            const data = await storeService.getAllStores(filter !== 'all' ? { status: filter } : {});
-            setStores(data);
+            let data;
+            
+            if ((shouldApplySearch || isSearchRequest) && searchTerm) {
+                console.log(`Searching stores with term: "${searchTerm}"`);
+                data = await storeService.searchStores(
+                    searchTerm,
+                    pagination.pageIndex,
+                    pagination.pageSize,
+                    activeFilter
+                );
+                
+                // Only reset the flag if this was called from the search useEffect
+                if (isSearchRequest) {
+                    // Reset shouldApplySearch without triggering another fetch
+                    setTimeout(() => {
+                        setShouldApplySearch(false);
+                    }, 10);
+                }
+            } else {
+                console.log(`Loading stores with filter: ${activeFilter}`);
+                data = await storeService.getPaginatedStores(
+                    pagination.pageIndex,
+                    pagination.pageSize,
+                    activeFilter
+                );
+            }
+            
+            setStores(data.items);
+            setPagination({
+                ...pagination,
+                totalCount: data.totalCount,
+                totalPages: data.totalPages
+            });
         } catch (err) {
             toastService.error('Cannot load store list. Please try again later.');
-            console.error('Error fetching stores:', err);
+            console.error('Error fetching paginated stores:', err);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleSearch = (e) => {
+        e.preventDefault();
+        console.log(`Initiating search with term: "${searchTerm}"`);
+        
+        // Reset to page 1 when searching
+        setPagination({
+            ...pagination,
+            pageIndex: 1
+        });
+        
+        // Immediately search instead of just setting a flag
+        searchStores(searchTerm);
+    };
+
+    // Hàm mới để trực tiếp xử lý tìm kiếm
+    const searchStores = async (term) => {
+        try {
+            setLoading(true);
+            console.log(`Directly searching stores with term: "${term}"`);
+            
+            let response;
+            // Nếu chuỗi tìm kiếm trống, lấy tất cả cửa hàng
+            if (!term.trim()) {
+                response = await storeService.getPaginatedStores(
+                    1, // Bắt đầu từ trang 1 cho tìm kiếm mới
+                    pagination.pageSize,
+                    activeFilter
+                );
+            } else {
+                response = await storeService.searchStores(
+                    term,
+                    1, // Bắt đầu từ trang 1 cho tìm kiếm mới
+                    pagination.pageSize,
+                    activeFilter
+                );
+            }
+            
+            setStores(response.items);
+            setPagination({
+                ...pagination,
+                pageIndex: 1,
+                totalCount: response.totalCount,
+                totalPages: response.totalPages
+            });
+            
+            // Đặt cờ sau khi tìm kiếm thành công
+            setShouldApplySearch(true);
+        } catch (err) {
+            toastService.error('Cannot search stores. Please try again later.');
+            console.error('Error searching stores:', err);
         } finally {
             setLoading(false);
         }
@@ -65,6 +229,13 @@ const StoreList = () => {
         }
     }, [stores]);
 
+    const handlePageChange = (newPage) => {
+        setPagination({
+            ...pagination,
+            pageIndex: newPage
+        });
+    };
+
     const getInitial = (name) => {
         return name ? name.charAt(0).toUpperCase() : '?';
     };
@@ -76,6 +247,11 @@ const StoreList = () => {
 
     const handleFilterChange = (filter) => {
         setActiveFilter(filter);
+        // Reset to page 1 when changing filter
+        setPagination({
+            ...pagination,
+            pageIndex: 1
+        });
     };
 
     const handleEditClick = (store) => {
@@ -101,7 +277,7 @@ const StoreList = () => {
                     error: 'Cannot update store. Please try again.'
                 }
             );
-            fetchStores(activeFilter);
+            fetchPaginatedStores();
             setEditingStore(null);
         } catch (err) {
             console.error('Error updating store:', err);
@@ -122,25 +298,43 @@ const StoreList = () => {
         <div className="store-list-container">
             <div className="store-list-header">
                 <h2>Store List</h2>
-                <div className="store-filters">
-                    <button 
-                        className={activeFilter === 'all' ? 'active' : ''} 
-                        onClick={() => handleFilterChange('all')}
-                    >
-                        All
-                    </button>
-                    <button 
-                        className={activeFilter === 'active' ? 'active' : ''} 
-                        onClick={() => handleFilterChange('active')}
-                    >
-                        Active
-                    </button>
-                    <button 
-                        className={activeFilter === 'inactive' ? 'active' : ''} 
-                        onClick={() => handleFilterChange('inactive')}
-                    >
-                        Inactive
-                    </button>
+                <div className="header-actions">
+                    <form onSubmit={handleSearch} className="search-form-inline" id="store-search-form">
+                        <div className="search-input-container">
+                            <input
+                                type="text"
+                                placeholder="Search stores..."
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                                className="search-input"
+                                id="store-search-input"
+                                name="store-search"
+                            />
+                            <button type="submit" className="search-button-inside" id="store-search-button" name="store-search-button">
+                                <MagnifyingGlassIcon className="search-icon" />
+                            </button>
+                        </div>
+                    </form>
+                    <div className="store-filters">
+                        <button 
+                            className={activeFilter === 'all' ? 'active' : ''} 
+                            onClick={() => handleFilterChange('all')}
+                        >
+                            All
+                        </button>
+                        <button 
+                            className={activeFilter === 'active' ? 'active' : ''} 
+                            onClick={() => handleFilterChange('active')}
+                        >
+                            Active
+                        </button>
+                        <button 
+                            className={activeFilter === 'inactive' ? 'active' : ''} 
+                            onClick={() => handleFilterChange('inactive')}
+                        >
+                            Inactive
+                        </button>
+                    </div>
                 </div>
             </div>
 
@@ -168,6 +362,10 @@ const StoreList = () => {
                         </div>
                         <h3 className="store-name">{store.name}</h3>
                         <p className="store-address">{store.address || 'Address not available'}</p>
+                        <p className="store-seller">
+                            <span className="seller-label">Seller:</span> 
+                            {store.sellerName || (store.sellerId ? store.sellerId : 'Unknown')}
+                        </p>
                         
                         <div className="store-stats">
                             <div className="stat-item">
@@ -195,6 +393,37 @@ const StoreList = () => {
                         </div>
                     </div>
                 ))}
+            </div>
+
+            <Pagination 
+                currentPage={pagination.pageIndex}
+                totalPages={pagination.totalPages}
+                onPageChange={handlePageChange}
+            />
+            
+            <div className="pagination-info">
+                Showing {stores.length} of {pagination.totalCount} stores
+                | Page {pagination.pageIndex} of {pagination.totalPages}
+                <div className="page-size-selector">
+                    <label htmlFor="store-page-size-select">Items/page:</label>
+                    <select 
+                        id="store-page-size-select"
+                        value={pagination.pageSize}
+                        onChange={(e) => {
+                            setPagination({
+                                ...pagination,
+                                pageSize: parseInt(e.target.value),
+                                pageIndex: 1 // Reset to page 1 when changing items/page
+                            });
+                        }}
+                        className="page-size-select"
+                    >
+                        <option value="6">6</option>
+                        <option value="12">12</option>
+                        <option value="24">24</option>
+                        <option value="48">48</option>
+                    </select>
+                </div>
             </div>
 
             {editingStore && (

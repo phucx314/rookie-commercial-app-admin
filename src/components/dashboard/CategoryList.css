@@ -120,6 +120,7 @@
   border: 2px solid var(--border-color);
   border-radius: var(--border-radius-md);
   overflow: hidden;
+  align-items: center;
 }
 
 .search-input {
@@ -132,6 +133,7 @@
   color: var(--text-color);
   font-size: var(--font-size-xs);
   transition: all var(--transition-fast);
+  height: 36px;
 }
 
 .search-input:focus {
@@ -147,8 +149,8 @@
 .search-button-inside {
   position: absolute;
   right: 0;
-  top: 0;
-  bottom: 0;
+  top: 50%;
+  transform: translateY(-50%);
   width: 30px !important;
   background-color: transparent !important;
   color: var(--text-color) !important;
@@ -160,6 +162,7 @@
   transition: all var(--transition-fast);
   padding: 6px !important;
   margin: 0;
+  height: 24px;
 }
 
 .search-button {

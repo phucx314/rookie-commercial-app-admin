@@ -10,6 +10,32 @@ class StoreService {
         }
     }
 
+    async getPaginatedStores(pageIndex = 1, pageSize = 12, status = 'all', searchTerm = '') {
+        try {
+            const response = await axios.get('/Store/paged', { 
+                params: { 
+                    pageIndex, 
+                    pageSize, 
+                    status,
+                    search: searchTerm 
+                } 
+            });
+            return response.data;
+        } catch (error) {
+            console.error('Error fetching paginated stores:', error);
+            throw error;
+        }
+    }
+
+    async searchStores(searchTerm, pageIndex = 1, pageSize = 12, status = 'all') {
+        try {
+            return await this.getPaginatedStores(pageIndex, pageSize, status, searchTerm);
+        } catch (error) {
+            console.error('Error searching stores:', error);
+            throw error;
+        }
+    }
+
     async getStoreById(id) {
         try {
             const response = await axios.get(`/Store/${id}`);

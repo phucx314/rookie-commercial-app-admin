@@ -183,7 +183,48 @@ const CategoryList = () => {
       pageIndex: 1
     });
     
-    // Set flag to indicate search should be applied
+    // Immediately search instead of just setting a flag
+    searchCategories(searchTerm);
+  };
+
+  // New function to directly handle search
+  const searchCategories = (term) => {
+    console.log(`Directly searching categories with term: "${term}"`);
+    
+    // Nếu chuỗi tìm kiếm trống, hiển thị tất cả danh mục
+    let filtered = allCategories;
+    
+    // Chỉ lọc khi có term
+    if (term.trim()) {
+      const lowercaseSearchTerm = term.toLowerCase();
+      filtered = allCategories.filter(category => 
+        category.name.toLowerCase().includes(lowercaseSearchTerm) || 
+        (category.description && category.description.toLowerCase().includes(lowercaseSearchTerm))
+      );
+    }
+    
+    // Apply sorting and pagination to filtered results
+    const sortedCategories = categoryService.getSortedCategories(filtered, sortConfig);
+    
+    // Calculate pagination
+    const totalCount = filtered.length;
+    const totalPages = Math.ceil(totalCount / pagination.pageSize);
+    
+    // Apply pagination
+    const startIndex = 0; // start at first page
+    const endIndex = pagination.pageSize;
+    const paginatedItems = sortedCategories.slice(startIndex, endIndex);
+    
+    // Update state
+    setCategories(paginatedItems);
+    setPagination({
+      ...pagination,
+      pageIndex: 1,
+      totalCount,
+      totalPages
+    });
+    
+    // Set the flag after successful search
     setShouldApplySearch(true);
   };
 
