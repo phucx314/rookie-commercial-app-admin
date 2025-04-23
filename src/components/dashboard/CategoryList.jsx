@@ -196,11 +196,11 @@ const CategoryList = () => {
     
     // Chỉ lọc khi có term
     if (term.trim()) {
-      const lowercaseSearchTerm = term.toLowerCase();
+    const lowercaseSearchTerm = term.toLowerCase();
       filtered = allCategories.filter(category => 
-        category.name.toLowerCase().includes(lowercaseSearchTerm) || 
-        (category.description && category.description.toLowerCase().includes(lowercaseSearchTerm))
-      );
+      category.name.toLowerCase().includes(lowercaseSearchTerm) || 
+      (category.description && category.description.toLowerCase().includes(lowercaseSearchTerm))
+    );
     }
     
     // Apply sorting and pagination to filtered results

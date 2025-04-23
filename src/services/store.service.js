@@ -45,6 +45,16 @@ class StoreService {
         }
     }
 
+    async getSellerInfo(sellerId) {
+        try {
+            const response = await axios.get(`/User/${sellerId}`);
+            return response.data;
+        } catch (error) {
+            console.error('Error fetching seller info:', error);
+            return null;
+        }
+    }
+
     async createStore(storeData) {
         try {
             const response = await axios.post('/Store', storeData);

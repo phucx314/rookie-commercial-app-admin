@@ -40,6 +40,7 @@ const ProductList = () => {
     });
     const [searchTerm, setSearchTerm] = useState(searchParams.get('search') || '');
     const [selectedCategoryId, setSelectedCategoryId] = useState(searchParams.get('category') || 'all');
+    const [selectedStoreId, setSelectedStoreId] = useState(searchParams.get('store') || 'all');
 
     // Need to track whether to filter by search term
     const [shouldApplySearch, setShouldApplySearch] = useState(!!searchParams.get('search'));
@@ -65,6 +66,10 @@ const ProductList = () => {
             params.set('category', selectedCategoryId);
         }
         
+        if (selectedStoreId !== 'all') {
+            params.set('store', selectedStoreId);
+        }
+        
         if (sortConfig.key) {
             params.set('sortBy', sortConfig.key);
             params.set('sortDir', sortConfig.direction);
@@ -72,7 +77,7 @@ const ProductList = () => {
         
         // Update URL without causing a navigation/reload
         setSearchParams(params);
-    }, [pagination.pageIndex, pagination.pageSize, selectedCategoryId, searchTerm, shouldApplySearch, sortConfig, setSearchParams]);
+    }, [pagination.pageIndex, pagination.pageSize, selectedCategoryId, selectedStoreId, searchTerm, shouldApplySearch, sortConfig, setSearchParams]);
 
     useEffect(() => {
         fetchInitialData();
@@ -80,15 +85,22 @@ const ProductList = () => {
     
     useEffect(() => {
         fetchProducts();
-    }, [pagination.pageIndex, pagination.pageSize, selectedCategoryId]);
+    }, [pagination.pageIndex, pagination.pageSize, selectedCategoryId, selectedStoreId]);
 
     // Separate useEffect to handle search
     useEffect(() => {
         if (shouldApplySearch) {
             // Store the current search term for comparison
             setCurrentSearchTerm(searchTerm);
-            // This will prevent the double fetch by not changing shouldApplySearch yet
-            fetchProducts(true);
+            // Only fetch if this is from URL param initialization, not after searchProducts is called
+            if (!searchTerm || currentSearchTerm !== searchTerm) {
+                fetchProducts(true);
+            } else {
+                // Just reset the flag without triggering another fetch
+                setTimeout(() => {
+                    setShouldApplySearch(false);
+                }, 10);
+            }
         }
     }, [shouldApplySearch]);
 
@@ -103,6 +115,11 @@ const ProductList = () => {
         const categoryFromUrl = searchParams.get('category');
         if (categoryFromUrl) {
             setSelectedCategoryId(categoryFromUrl);
+        }
+        
+        const storeFromUrl = searchParams.get('store');
+        if (storeFromUrl) {
+            setSelectedStoreId(storeFromUrl);
         }
         
         const pageFromUrl = searchParams.get('page');
@@ -163,13 +180,88 @@ const ProductList = () => {
                         setShouldApplySearch(false);
                     }, 10);
                 }
+            } else if (selectedCategoryId !== 'all' && selectedStoreId !== 'all') {
+                // Lọc theo cả danh mục và cửa hàng (lọc kép)
+                console.log(`Fetching products for category: ${selectedCategoryId} and store: ${selectedStoreId}`);
+                
+                // Lấy tất cả sản phẩm của danh mục đó trước
+                const categoryResponse = await productService.getPaginatedProductsByCategory(
+                    selectedCategoryId,
+                    1, // Luôn bắt đầu từ trang 1 để đảm bảo lấy tất cả
+                    1000 // Lấy số lượng lớn để đảm bảo lấy được tất cả (giả định không quá 1000 sản phẩm)
+                );
+                
+                // Lọc thủ công theo store
+                if (categoryResponse && categoryResponse.items) {
+                    console.log(`Filtering ${categoryResponse.items.length} products by store ID: ${selectedStoreId}`);
+                    
+                    // Debug để kiểm tra storeId trong products
+                    categoryResponse.items.forEach(product => {
+                        console.log(`Product ${product.name} has storeId: ${product.storeId}`);
+                    });
+                    
+                    const filteredItems = categoryResponse.items.filter(product => 
+                        product.storeId && product.storeId.toString() === selectedStoreId.toString()
+                    );
+                    
+                    console.log(`Found ${filteredItems.length} products after store filtering`);
+                    
+                    // Tạo trang dữ liệu giả lập cho phân trang ở client
+                    const start = (pagination.pageIndex - 1) * pagination.pageSize;
+                    const paginatedItems = filteredItems.slice(start, start + pagination.pageSize);
+                    
+                    response = {
+                        items: paginatedItems,
+                        totalCount: filteredItems.length,
+                        pageIndex: pagination.pageIndex,
+                        pageSize: pagination.pageSize,
+                        totalPages: Math.ceil(filteredItems.length / pagination.pageSize) || 1
+                    };
+                }
             } else if (selectedCategoryId !== 'all') {
+                // Chỉ lọc theo danh mục
                 console.log(`Fetching products for category: ${selectedCategoryId}`);
                 response = await productService.getPaginatedProductsByCategory(
                     selectedCategoryId,
                     pagination.pageIndex,
                     pagination.pageSize
                 );
+            } else if (selectedStoreId !== 'all') {
+                // Chỉ lọc theo cửa hàng
+                console.log(`Fetching products for store ID: ${selectedStoreId}`);
+                
+                // Lấy tất cả sản phẩm rồi lọc thủ công
+                const allProductsResponse = await productService.getPaginatedProducts(
+                    1, // Luôn bắt đầu từ trang 1 để đảm bảo lấy tất cả
+                    1000 // Lấy số lượng lớn để đảm bảo lấy được tất cả (giả định không quá 1000 sản phẩm)
+                );
+                
+                if (allProductsResponse && allProductsResponse.items) {
+                    console.log(`Filtering ${allProductsResponse.items.length} products by store ID: ${selectedStoreId}`);
+                    
+                    // Debug để kiểm tra storeId trong products
+                    allProductsResponse.items.forEach(product => {
+                        console.log(`Product ${product.name} has storeId: ${product.storeId}`);
+                    });
+                    
+                    const filteredItems = allProductsResponse.items.filter(product => 
+                        product.storeId && product.storeId.toString() === selectedStoreId.toString()
+                    );
+                    
+                    console.log(`Found ${filteredItems.length} products after store filtering`);
+                    
+                    // Tạo trang dữ liệu giả lập cho phân trang ở client
+                    const start = (pagination.pageIndex - 1) * pagination.pageSize;
+                    const paginatedItems = filteredItems.slice(start, start + pagination.pageSize);
+                    
+                    response = {
+                        items: paginatedItems,
+                        totalCount: filteredItems.length,
+                        pageIndex: pagination.pageIndex,
+                        pageSize: pagination.pageSize,
+                        totalPages: Math.ceil(filteredItems.length / pagination.pageSize) || 1
+                    };
+                }
             } else {
                 console.log('Fetching all paginated products');
                 response = await productService.getPaginatedProducts(
@@ -178,15 +270,33 @@ const ProductList = () => {
                 );
             }
             
-            setProducts(response.items);
-            setPagination({
-                ...pagination,
-                totalCount: response.totalCount,
-                totalPages: response.totalPages
-            });
+            // Đảm bảo response tồn tại trước khi cập nhật state
+            if (response && response.items) {
+                setProducts(response.items);
+                setPagination({
+                    ...pagination,
+                    totalCount: response.totalCount || 0,
+                    totalPages: response.totalPages || Math.ceil((response.totalCount || 0) / pagination.pageSize) || 1
+                });
+            } else {
+                // Nếu không có response.items, hiển thị danh sách trống
+                setProducts([]);
+                setPagination({
+                    ...pagination,
+                    totalCount: 0,
+                    totalPages: 1
+                });
+            }
         } catch (err) {
             toastService.error('Không thể tải sản phẩm. Vui lòng thử lại sau.');
             console.error('Error fetching products:', err);
+            // Trong trường hợp lỗi, hiển thị danh sách trống
+            setProducts([]);
+            setPagination({
+                ...pagination,
+                totalCount: 0,
+                totalPages: 1
+            });
         } finally {
             setLoading(false);
         }
@@ -242,8 +352,11 @@ const ProductList = () => {
                 totalPages: response.totalPages
             });
             
-            // Set the flag after successful search
-            setShouldApplySearch(true);
+            // Lưu từ khóa tìm kiếm hiện tại để so sánh
+            setCurrentSearchTerm(term);
+            
+            // KHÔNG đặt shouldApplySearch = true ở đây để tránh gọi API lần nữa
+            // setShouldApplySearch(true);
         } catch (err) {
             toastService.error('Không thể tìm kiếm sản phẩm. Vui lòng thử lại sau.');
             console.error('Error searching products:', err);
@@ -259,6 +372,19 @@ const ProductList = () => {
         setShouldApplySearch(false);
         setSearchTerm('');
         // Reset to page 1 when changing category
+        setPagination({
+            ...pagination,
+            pageIndex: 1
+        });
+    };
+
+    const handleStoreChange = (e) => {
+        const storeId = e.target.value;
+        setSelectedStoreId(storeId);
+        // Reset search when changing stores
+        setShouldApplySearch(false);
+        setSearchTerm('');
+        // Reset to page 1 when changing store
         setPagination({
             ...pagination,
             pageIndex: 1
@@ -413,6 +539,22 @@ const ProductList = () => {
                             {categories.map(category => (
                                 <option key={category.id} value={category.id}>
                                     {category.name}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
+                    <div className="store-filter">
+                        <select 
+                            value={selectedStoreId} 
+                            onChange={handleStoreChange}
+                            className="store-select"
+                            id="store-filter-select"
+                            name="store-filter"
+                        >
+                            <option value="all">All Stores</option>
+                            {stores.map(store => (
+                                <option key={store.id} value={store.id}>
+                                    {store.name}
                                 </option>
                             ))}
                         </select>

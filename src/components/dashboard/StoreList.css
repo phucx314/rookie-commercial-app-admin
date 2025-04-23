@@ -27,6 +27,23 @@
   align-items: center;
 }
 
+/* .refresh-btn {
+  padding: 8px 12px;
+  background-color: var(--card-background);
+  color: var(--text-color);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-xl);
+  cursor: pointer;
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+  transition: all var(--transition-fast);
+} */
+
+.refresh-btn:hover {
+  background-color: var(--hover-background);
+  border-color: var(--text-color);
+}
+
 .store-filters {
   display: flex;
   gap: 12px;

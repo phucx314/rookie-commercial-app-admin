@@ -32,6 +32,38 @@ class ProductService {
         }
     }
 
+    async getPaginatedProductsByStore(storeId, pageIndex = 1, pageSize = 10) {
+        try {
+            const response = await axios.get('/Product/paged', { 
+                params: { 
+                    pageIndex, 
+                    pageSize,
+                    storeId
+                } 
+            });
+            return response.data;
+        } catch (error) {
+            console.error('Error fetching products by store:', error);
+            throw error;
+        }
+    }
+
+    async getPaginatedProductsByCategoryAndStore(categoryId, storeId, pageIndex = 1, pageSize = 10) {
+        try {
+            const response = await axios.get(`/Product/category/${categoryId}/paged`, { 
+                params: { 
+                    pageIndex, 
+                    pageSize,
+                    storeId
+                } 
+            });
+            return response.data;
+        } catch (error) {
+            console.error('Error fetching products by category and store:', error);
+            throw error;
+        }
+    }
+
     async searchProducts(searchTerm, pageIndex = 1, pageSize = 10) {
         try {
             const response = await axios.get('/Product/search', { 

@@ -94,12 +94,25 @@ const StoreList = () => {
         if (shouldApplySearch) {
             // Store the current search term for comparison
             setCurrentSearchTerm(searchTerm);
-            // This will prevent the double fetch by not changing shouldApplySearch yet
-            fetchPaginatedStores(true);
+            // Only fetch if this is from URL param initialization, not after searchStores is called
+            if (!searchTerm || currentSearchTerm !== searchTerm) {
+                fetchPaginatedStores(true);
+            } else {
+                // Just reset the flag without triggering another fetch
+                setTimeout(() => {
+                    setShouldApplySearch(false);
+                }, 10);
+            }
         }
     }, [shouldApplySearch]);
 
-    const fetchPaginatedStores = async (isSearchRequest = false) => {
+    // Hàm mới để force refresh dữ liệu
+    const handleRefreshData = () => {
+        console.log("Đang làm mới dữ liệu cửa hàng...");
+        fetchPaginatedStores(false, true);
+    };
+
+    const fetchPaginatedStores = async (isSearchRequest = false, isForceRefresh = false) => {
         try {
             setLoading(true);
             let data;
@@ -127,6 +140,14 @@ const StoreList = () => {
                     pagination.pageSize,
                     activeFilter
                 );
+            }
+            
+            // Log dữ liệu để kiểm tra
+            if (isForceRefresh) {
+                console.log("Dữ liệu cửa hàng đã được làm mới:", data);
+                data.items.forEach(store => {
+                    console.log(`Cửa hàng: ${store.name}, Seller ID: ${store.sellerId}, Seller Name: ${store.sellerName}`);
+                });
             }
             
             setStores(data.items);
@@ -188,8 +209,11 @@ const StoreList = () => {
                 totalPages: response.totalPages
             });
             
-            // Đặt cờ sau khi tìm kiếm thành công
-            setShouldApplySearch(true);
+            // Lưu từ khóa tìm kiếm hiện tại để so sánh
+            setCurrentSearchTerm(term);
+            
+            // KHÔNG đặt shouldApplySearch = true ở đây để tránh gọi API lần nữa
+            // setShouldApplySearch(true);
         } catch (err) {
             toastService.error('Cannot search stores. Please try again later.');
             console.error('Error searching stores:', err);
@@ -226,8 +250,44 @@ const StoreList = () => {
 
         if (stores.length > 0) {
             fetchStoreStats();
+            // Lấy thông tin người bán nếu thiếu
+            fetchMissingSellerInfo();
         }
     }, [stores]);
+
+    // Hàm mới để lấy thông tin người bán bị thiếu
+    const fetchMissingSellerInfo = async () => {
+        const storesWithoutSellerName = stores.filter(store => !store.sellerName && store.sellerId);
+        if (storesWithoutSellerName.length === 0) return;
+        
+        console.log(`Có ${storesWithoutSellerName.length} cửa hàng thiếu thông tin người bán. Đang lấy thông tin...`);
+        
+        try {
+            const updatedStores = [...stores];
+            
+            // Lấy thông tin người bán cho từng cửa hàng
+            for (const store of storesWithoutSellerName) {
+                const sellerInfo = await storeService.getSellerInfo(store.sellerId);
+                if (sellerInfo) {
+                    // Cập nhật thông tin người bán trong store
+                    const index = updatedStores.findIndex(s => s.id === store.id);
+                    if (index !== -1) {
+                        updatedStores[index] = {
+                            ...updatedStores[index],
+                            sellerName: sellerInfo.username || sellerInfo.fullName
+                        };
+                        console.log(`Đã cập nhật thông tin người bán cho cửa hàng ${store.name}: ${sellerInfo.username || sellerInfo.fullName}`);
+                    }
+                }
+            }
+            
+            // Cập nhật state danh sách cửa hàng với thông tin đã cập nhật
+            setStores(updatedStores);
+            
+        } catch (error) {
+            console.error('Lỗi khi lấy thông tin người bán:', error);
+        }
+    };
 
     const handlePageChange = (newPage) => {
         setPagination({
@@ -299,6 +359,13 @@ const StoreList = () => {
             <div className="store-list-header">
                 <h2>Store List</h2>
                 <div className="header-actions">
+                    {/* <button 
+                        onClick={handleRefreshData}
+                        className="refresh-btn"
+                        title="Làm mới dữ liệu"
+                    >
+                        Refresh
+                    </button> */}
                     <form onSubmit={handleSearch} className="search-form-inline" id="store-search-form">
                         <div className="search-input-container">
                             <input
@@ -364,7 +431,7 @@ const StoreList = () => {
                         <p className="store-address">{store.address || 'Address not available'}</p>
                         <p className="store-seller">
                             <span className="seller-label">Seller:</span> 
-                            {store.sellerName || (store.sellerId ? store.sellerId : 'Unknown')}
+                            {store.sellerName || 'Chưa có thông tin người bán'}
                         </p>
                         
                         <div className="store-stats">
