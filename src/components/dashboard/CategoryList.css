@@ -16,6 +16,52 @@
   margin: 0;
 }
 
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.search-form-inline {
+  display: flex;
+  align-items: center;
+  max-width: 300px;
+}
+
+.search-button-inline {
+  padding: 6px 10px;
+  height: 32px;
+  background-color: var(--text-color);
+  color: var(--background-color);
+  border: none;
+  border-radius: var(--border-radius-md);
+  font-size: var(--font-size-xs);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  display: flex;
+  align-items: center;
+}
+
+.search-button-icon {
+  width: 32px;
+  height: 32px;
+  padding: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--text-color);
+  color: var(--background-color);
+  border: none;
+  border-radius: var(--border-radius-md);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.search-button-inline:hover,
+.search-button-icon:hover {
+  opacity: 0.9;
+}
+
 .add-category-btn {
   display: inline-flex;
   align-items: center;
@@ -44,6 +90,91 @@
 .add-category-btn svg {
   width: var(--icon-size-sm);
   height: var(--icon-size-sm);
+}
+
+/* Filters */
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-md);
+  margin-bottom: var(--spacing-md);
+  padding: var(--spacing-md);
+  background-color: var(--card-background);
+  border-radius: var(--border-radius-lg);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.search-form {
+  display: flex;
+  flex: 1;
+  min-width: 300px;
+  gap: var(--spacing-xs);
+}
+
+.search-input-container {
+  position: relative;
+  display: flex;
+  flex: 1;
+  max-width: 300px;
+  background-color: var(--background-color);
+  border: 2px solid var(--border-color);
+  border-radius: var(--border-radius-md);
+  overflow: hidden;
+}
+
+.search-input {
+  flex: 1;
+  padding: var(--input-padding);
+  padding-right: 30px;
+  border: none !important;
+  border-radius: var(--border-radius-md) !important;
+  background: transparent !important;
+  color: var(--text-color);
+  font-size: var(--font-size-xs);
+  transition: all var(--transition-fast);
+}
+
+.search-input:focus {
+  outline: none;
+  box-shadow: none;
+}
+
+.search-input-container:focus-within {
+  border-color: var(--text-color);
+  box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.1);
+}
+
+.search-button-inside {
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: 30px !important;
+  background-color: transparent !important;
+  color: var(--text-color) !important;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition-fast);
+  padding: 6px !important;
+  margin: 0;
+}
+
+.search-button {
+  padding: var(--button-padding);
+  background-color: var(--text-color);
+  color: var(--background-color);
+  border: none;
+  border-radius: var(--border-radius-md);
+  font-size: var(--font-size-xs);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.search-button:hover {
+  opacity: 0.9;
 }
 
 .categories-table-container {
@@ -243,6 +374,59 @@
   font-size: var(--font-size-xs);
 }
 
+/* Pagination info */
+.pagination-info {
+  text-align: center;
+  margin-top: var(--spacing-sm);
+  color: var(--text-color);
+  opacity: 0.7;
+  font-size: var(--font-size-xs);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: var(--spacing-md);
+}
+
+.page-size-selector {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  margin-left: var(--spacing-md);
+}
+
+.page-size-selector label {
+  font-size: var(--font-size-xs);
+  color: var(--text-color);
+  opacity: 0.7;
+}
+
+.page-size-select {
+  background-color: var(--background-color);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-sm);
+  color: var(--text-color);
+  font-size: var(--font-size-xs);
+  padding: 2px 5px;
+  cursor: pointer;
+  min-width: 50px;
+}
+
+.page-size-select:focus {
+  outline: none;
+  border-color: var(--text-color);
+}
+
+/* Loading styles */
+.loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 200px;
+  font-size: var(--font-size-md);
+  color: var(--text-color);
+  opacity: 0.7;
+}
+
 /* Thêm thanh scroll tùy chỉnh */
 .categories-table-container::-webkit-scrollbar {
   height: 8px;
@@ -261,4 +445,10 @@
 
 .categories-table-container::-webkit-scrollbar-thumb:hover {
   opacity: 0.7;
+}
+
+.search-icon {
+  width: 22px !important;
+  height: 22px !important;
+  color: var(--text-color) !important;
 } 

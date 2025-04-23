@@ -72,22 +72,87 @@
   margin: 0;
 }
 
-/* Rankings */
-.rankings {
+/* Dashboard Content Layout */
+.dashboard-content {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 24px;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--spacing-lg);
+  margin-top: var(--spacing-lg);
 }
 
+.chart-section {
+  height: 50%;
+}
+
+.chart-card {
+  background-color: var(--card-background);
+  border-radius: var(--border-radius-xl);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  padding: var(--spacing-lg);
+  border: 1px solid var(--border-color);
+  backdrop-filter: blur(10px);
+  overflow: hidden;
+  min-height: 300px;
+  /* height: 100%; */
+  min-width: 500px;
+  display: flex;
+  flex-direction: column;
+}
+
+.chart-card h3 {
+  margin-top: 0;
+  margin-bottom: var(--spacing-md);
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-color);
+  text-align: center;
+}
+
+.chart-wrapper {
+  flex: 1;
+  min-height: 400px;
+  position: relative;
+}
+
+/* Rankings Section */
+.rankings-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+  max-height: 500px;
+  overflow-y: auto;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+}
+
+.rankings-section::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
+}
+
+.rankings-section .ranking-card {
+  margin: 0;
+  flex: 1;
+  max-height: 150px;
+  overflow-y: auto;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+}
+
+.rankings-section .ranking-card::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
+}
+
+/* Rankings */
 .ranking-card {
   background: var(--card-background);
   border-radius: 12px;
-  padding: 24px;
+  padding: 16px;
+  height: min-content;
   border: 1px solid var(--border-color);
 }
 
 .ranking-card h3 {
-  margin: 0 0 20px 0;
+  margin: 0 0 12px 0;
   color: var(--text-color);
   font-size: var(--font-size-md);
 }
@@ -95,14 +160,14 @@
 .ranking-list {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 8px;
 }
 
 .ranking-item {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 12px;
+  padding: 8px;
   background: var(--background-color);
   border-radius: 8px;
   transition: transform 0.2s;
@@ -110,7 +175,6 @@
 
 .ranking-item:hover {
   transform: translateX(4px);
-  background: var(--hover-background);
 }
 
 .ranking-position {
@@ -123,18 +187,57 @@
 
 .ranking-info {
   flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
 
 .ranking-title {
   font-weight: var(--font-weight-medium);
   color: var(--text-color);
-  margin-bottom: 4px;
   font-size: var(--font-size-sm);
 }
 
 .ranking-value {
-  font-size: var(--font-size-xs);
+  font-size: var(--font-size-sm);
   color: var(--text-color);
   opacity: 0.8;
-  font-weight: var(--font-weight-medium);
+  font-weight: var(--font-weight-semibold);
+  text-align: right;
+}
+
+/* Responsive styles */
+@media (max-width: 1200px) {
+  .dashboard-content {
+    grid-template-columns: 1fr;
+  }
+  
+  .chart-wrapper {
+    min-height: 350px;
+  }
+  
+  .rankings-section {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--spacing-md);
+  }
+}
+
+@media (max-width: 768px) {
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .rankings-section {
+    grid-template-columns: 1fr;
+  }
+  
+  .chart-wrapper {
+    min-height: 300px;
+  }
+}
+
+/* Remove the old chart styles */
+.charts-container {
+  display: none;
 } 
