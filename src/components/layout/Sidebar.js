@@ -24,7 +24,7 @@ const Sidebar = () => {
     { path: '/products', name: 'Products', icon: ShoppingBagIcon },
     { path: '/stores', name: 'Stores', icon: BuildingStorefrontIcon },
     { path: '/sellers', name: 'Sellers', icon: UsersIcon },
-    { path: '/customers', name: 'Customers', icon: UserIcon },
+    // { path: '/customers', name: 'Customers', icon: UserIcon },
   ];
 
   const handleLogout = async () => {

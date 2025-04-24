@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from '../../api/axios';
+import { toastService } from '../../services';
 import './Login.css';
 
 const Login = () => {
@@ -9,7 +10,6 @@ const Login = () => {
     email: '',
     password: '',
   });
-  const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
   const handleChange = (e) => {
@@ -18,13 +18,10 @@ const Login = () => {
       ...prev,
       [name]: value
     }));
-    // Clear error when user starts typing
-    if (error) setError('');
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
     setLoading(true);
 
     try {
@@ -42,6 +39,9 @@ const Login = () => {
       sessionStorage.setItem('expiration', expiration);
       sessionStorage.setItem('lastActivity', new Date().toISOString());
       
+      // Hiển thị thông báo thành công
+      toastService.success(`Hello, ${user.name || user.email}!`);
+      
       // Redirect to dashboard
       navigate('/dashboard');
     } catch (err) {
@@ -52,9 +52,9 @@ const Login = () => {
       });
 
       if (err.message === 'Network Error') {
-        setError('Cannot connect to server. Please check your network connection and try again.');
+        toastService.error('Cannot connect to server. Please check your network connection and try again.');
       } else {
-        setError(err.response?.data?.message || 'Login failed. Please try again.');
+        toastService.error(err.response?.data?.message || 'Login failed. Please try again.');
       }
     } finally {
       setLoading(false);
@@ -66,8 +66,6 @@ const Login = () => {
       <div className="login-box">
         <h1>ECOM ADMIN</h1>
         <h2>Login</h2>
-        
-        {error && <div className="error-message">{error}</div>}
         
         <form onSubmit={handleSubmit}>
           <div className="form-group">
