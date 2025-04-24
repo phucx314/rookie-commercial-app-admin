@@ -27,7 +27,7 @@
   align-items: center;
 }
 
-/* .refresh-btn {
+.select-mode-btn {
   padding: 8px 12px;
   background-color: var(--card-background);
   color: var(--text-color);
@@ -37,7 +37,41 @@
   font-size: var(--font-size-xs);
   font-weight: var(--font-weight-medium);
   transition: all var(--transition-fast);
-} */
+}
+
+.select-mode-btn.active {
+  background-color: var(--text-color);
+  color: var(--background-color);
+}
+
+.batch-delete-btn {
+  padding: 8px 12px;
+  background-color: #dc3545;
+  color: white;
+  border: none;
+  border-radius: var(--border-radius-xl);
+  cursor: pointer;
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+  transition: all var(--transition-fast);
+}
+
+.batch-delete-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.refresh-btn {
+  padding: 8px 12px;
+  background-color: var(--card-background);
+  color: var(--text-color);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-xl);
+  cursor: pointer;
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+  transition: all var(--transition-fast);
+}
 
 .refresh-btn:hover {
   background-color: var(--hover-background);
@@ -142,10 +176,25 @@
   border: 1px solid var(--border-color);
   transition: transform 0.2s ease;
   min-width: 200px;
+  position: relative;
 }
 
-.store-card:hover {
-  transform: translateY(-2px);
+.store-card.selected-card {
+  border: 2px solid var(--text-color);
+  box-shadow: 0 0 0 1px var(--text-color);
+}
+
+.store-checkbox {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  z-index: 5;
+}
+
+.store-checkbox input[type="checkbox"] {
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
 }
 
 .store-logo {
@@ -409,4 +458,8 @@
 .modal-actions button:last-child {
   background-color: var(--text-color);
   color: var(--background-color);
+}
+
+.store-card:hover {
+  transform: translateY(-2px);
 } 

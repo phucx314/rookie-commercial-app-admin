@@ -37,6 +37,10 @@ const StoreList = () => {
     const [shouldApplySearch, setShouldApplySearch] = useState(!!searchParams.get('search'));
     const [currentSearchTerm, setCurrentSearchTerm] = useState('');
 
+    // Multiple select states
+    const [selectedItems, setSelectedItems] = useState(new Set());
+    const [selectMode, setSelectMode] = useState(false);
+
     // Update URL when filters change
     useEffect(() => {
         const params = new URLSearchParams();
@@ -352,6 +356,78 @@ const StoreList = () => {
         }));
     };
 
+    // Multiple select handlers
+    const toggleSelectMode = () => {
+        setSelectMode(!selectMode);
+        if (selectMode) {
+            // Clear selections when exiting select mode
+            setSelectedItems(new Set());
+        }
+    };
+
+    const toggleItemSelection = (id) => {
+        const newSelectedItems = new Set(selectedItems);
+        if (newSelectedItems.has(id)) {
+            newSelectedItems.delete(id);
+        } else {
+            newSelectedItems.add(id);
+        }
+        setSelectedItems(newSelectedItems);
+    };
+
+    const toggleSelectAll = () => {
+        if (selectedItems.size === stores.length) {
+            // Deselect all
+            setSelectedItems(new Set());
+        } else {
+            // Select all
+            const allIds = stores.map(store => store.id);
+            setSelectedItems(new Set(allIds));
+        }
+    };
+
+    const handleBatchDelete = async () => {
+        if (selectedItems.size === 0) return;
+        
+        if (window.confirm(`Bạn có chắc chắn muốn xóa ${selectedItems.size} cửa hàng đã chọn?`)) {
+            setLoading(true);
+            
+            try {
+                // Process deletions one by one
+                const deletePromises = Array.from(selectedItems).map(id =>
+                    storeService.deleteStore(id)
+                        .then(() => ({ id, success: true }))
+                        .catch(error => {
+                            console.error(`Error deleting store ${id}:`, error);
+                            return { id, success: false, error };
+                        })
+                );
+                
+                const results = await Promise.all(deletePromises);
+                
+                // Count successes and failures correctly
+                const successful = results.filter(r => r.success === true).length;
+                const failed = results.filter(r => r.success === false).length;
+                
+                if (failed > 0) {
+                    toastService.warning(`Đã xóa ${successful} cửa hàng thành công, ${failed} cửa hàng thất bại.`);
+                } else {
+                    toastService.success(`Đã xóa ${successful} cửa hàng thành công!`);
+                }
+                
+                // Exit select mode and refresh data
+                setSelectMode(false);
+                setSelectedItems(new Set());
+                fetchPaginatedStores();
+            } catch (error) {
+                console.error('Error in batch delete:', error);
+                toastService.error('Lỗi khi xóa cửa hàng hàng loạt');
+            } finally {
+                setLoading(false);
+            }
+        }
+    };
+
     if (loading) return <div className="loading">Loading stores...</div>;
 
     return (
@@ -359,13 +435,21 @@ const StoreList = () => {
             <div className="store-list-header">
                 <h2>Store List</h2>
                 <div className="header-actions">
-                    {/* <button 
-                        onClick={handleRefreshData}
-                        className="refresh-btn"
-                        title="Làm mới dữ liệu"
+                    <button
+                        className={`select-mode-btn ${selectMode ? 'active' : ''}`}
+                        onClick={toggleSelectMode}
                     >
-                        Refresh
-                    </button> */}
+                        {selectMode ? 'Cancel' : 'Select'}
+                    </button>
+                    {selectMode && (
+                        <button 
+                            className="batch-delete-btn"
+                            onClick={handleBatchDelete}
+                            disabled={selectedItems.size === 0}
+                        >
+                            Delete Selected ({selectedItems.size})
+                        </button>
+                    )}
                     <form onSubmit={handleSearch} className="search-form-inline" id="store-search-form">
                         <div className="search-input-container">
                             <input
@@ -407,7 +491,17 @@ const StoreList = () => {
 
             <div className="store-grid">
                 {stores.map(store => (
-                    <div key={store.id} className="store-card">
+                    <div key={store.id} className={`store-card ${selectedItems.has(store.id) ? 'selected-card' : ''}`}>
+                        {selectMode && (
+                            <div className="store-checkbox">
+                                <input
+                                    type="checkbox"
+                                    checked={selectedItems.has(store.id)}
+                                    onChange={() => toggleItemSelection(store.id)}
+                                    id={`select-checkbox-${store.id}`}
+                                />
+                            </div>
+                        )}
                         <div className="store-logo">
                             {store.logoUrl ? (
                                 <>

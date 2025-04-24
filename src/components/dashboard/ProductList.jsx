@@ -42,6 +42,10 @@ const ProductList = () => {
     const [selectedCategoryId, setSelectedCategoryId] = useState(searchParams.get('category') || 'all');
     const [selectedStoreId, setSelectedStoreId] = useState(searchParams.get('store') || 'all');
 
+    // Multiple select states
+    const [selectedItems, setSelectedItems] = useState(new Set());
+    const [selectMode, setSelectMode] = useState(false);
+
     // Need to track whether to filter by search term
     const [shouldApplySearch, setShouldApplySearch] = useState(!!searchParams.get('search'));
     const [currentSearchTerm, setCurrentSearchTerm] = useState('');
@@ -453,6 +457,78 @@ const ProductList = () => {
         }
     };
 
+    // Multiple select handlers
+    const toggleSelectMode = () => {
+        setSelectMode(!selectMode);
+        if (selectMode) {
+            // Clear selections when exiting select mode
+            setSelectedItems(new Set());
+        }
+    };
+
+    const toggleItemSelection = (id) => {
+        const newSelectedItems = new Set(selectedItems);
+        if (newSelectedItems.has(id)) {
+            newSelectedItems.delete(id);
+        } else {
+            newSelectedItems.add(id);
+        }
+        setSelectedItems(newSelectedItems);
+    };
+
+    const toggleSelectAll = () => {
+        if (selectedItems.size === products.length) {
+            // Deselect all
+            setSelectedItems(new Set());
+        } else {
+            // Select all
+            const allIds = products.map(product => product.id);
+            setSelectedItems(new Set(allIds));
+        }
+    };
+
+    const handleBatchDelete = async () => {
+        if (selectedItems.size === 0) return;
+        
+        if (window.confirm(`Bạn có chắc chắn muốn xóa ${selectedItems.size} sản phẩm đã chọn?`)) {
+            setLoading(true);
+            
+            try {
+                // Process deletions one by one
+                const deletePromises = Array.from(selectedItems).map(id =>
+                    productService.deleteProduct(id)
+                        .then(() => ({ id, success: true }))
+                        .catch(error => {
+                            console.error(`Error deleting product ${id}:`, error);
+                            return { id, success: false, error };
+                        })
+                );
+                
+                const results = await Promise.all(deletePromises);
+                
+                // Count successes and failures correctly
+                const successful = results.filter(r => r.success === true).length;
+                const failed = results.filter(r => r.success === false).length;
+                
+                if (failed > 0) {
+                    toastService.warning(`Đã xóa ${successful} sản phẩm thành công, ${failed} sản phẩm thất bại.`);
+                } else {
+                    toastService.success(`Đã xóa ${successful} sản phẩm thành công!`);
+                }
+                
+                // Exit select mode and refresh data
+                setSelectMode(false);
+                setSelectedItems(new Set());
+                fetchProducts();
+            } catch (error) {
+                console.error('Error in batch delete:', error);
+                toastService.error('Lỗi khi xóa sản phẩm hàng loạt');
+            } finally {
+                setLoading(false);
+            }
+        }
+    };
+
     const handleDuplicateProduct = async (product) => {
         try {
             // Log product data to see what we're duplicating
@@ -575,10 +651,27 @@ const ProductList = () => {
                             </button>
                         </div>
                     </form>
-                    <button className="add-product-btn" onClick={() => setIsModalOpen(true)}>
-                        <PlusIcon className="w-5 h-5" />
-                        Add Product
+                    <button
+                        className={`select-mode-btn ${selectMode ? 'active' : ''}`}
+                        onClick={toggleSelectMode}
+                    >
+                        {selectMode ? 'Cancel' : 'Select'}
                     </button>
+                    {selectMode && (
+                        <button 
+                            className="batch-delete-btn"
+                            onClick={handleBatchDelete}
+                            disabled={selectedItems.size === 0}
+                        >
+                            Delete Selected ({selectedItems.size})
+                        </button>
+                    )}
+                    {!selectMode && (
+                        <button className="add-product-btn" onClick={() => setIsModalOpen(true)}>
+                            <PlusIcon className="w-5 h-5" />
+                            Add Product
+                        </button>
+                    )}
                 </div>
             </div>
             
@@ -586,6 +679,16 @@ const ProductList = () => {
                 <table className="products-table">
                     <thead>
                         <tr>
+                            {selectMode && (
+                                <th className="checkbox-column">
+                                    <input
+                                        type="checkbox"
+                                        checked={selectedItems.size === products.length && products.length > 0}
+                                        onChange={toggleSelectAll}
+                                        id="select-all-checkbox"
+                                    />
+                                </th>
+                            )}
                             <th>Image</th>
                             <th onClick={() => handleSort('name')} className="sortable">
                                 Product Name {renderSortIcon('name')}
@@ -619,7 +722,17 @@ const ProductList = () => {
                     </thead>
                     <tbody>
                         {productService.getSortedProducts(products, categories, stores, sortConfig).map(product => (
-                            <tr key={product.id}>
+                            <tr key={product.id} className={selectedItems.has(product.id) ? 'selected-row' : ''}>
+                                {selectMode && (
+                                    <td className="checkbox-column">
+                                        <input
+                                            type="checkbox"
+                                            checked={selectedItems.has(product.id)}
+                                            onChange={() => toggleItemSelection(product.id)}
+                                            id={`select-checkbox-${product.id}`}
+                                        />
+                                    </td>
+                                )}
                                 <td>
                                     <img 
                                         src={product.imageUrl || '/placeholder.png'} 

@@ -26,6 +26,10 @@ const CategoryList = () => {
   });
   const [loading, setLoading] = useState(true);
   
+  // Multiple select states
+  const [selectedItems, setSelectedItems] = useState(new Set());
+  const [selectMode, setSelectMode] = useState(false);
+  
   // Pagination states
   const [pagination, setPagination] = useState({
     pageIndex: parseInt(searchParams.get('page')) || 1,
@@ -317,6 +321,78 @@ const CategoryList = () => {
       : <ChevronDownIcon className="sort-icon active" />;
   };
 
+  // Multiple select handlers
+  const toggleSelectMode = () => {
+    setSelectMode(!selectMode);
+    if (selectMode) {
+      // Clear selections when exiting select mode
+      setSelectedItems(new Set());
+    }
+  };
+
+  const toggleItemSelection = (id) => {
+    const newSelectedItems = new Set(selectedItems);
+    if (newSelectedItems.has(id)) {
+      newSelectedItems.delete(id);
+    } else {
+      newSelectedItems.add(id);
+    }
+    setSelectedItems(newSelectedItems);
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedItems.size === categories.length) {
+      // Deselect all
+      setSelectedItems(new Set());
+    } else {
+      // Select all
+      const allIds = categories.map(category => category.id);
+      setSelectedItems(new Set(allIds));
+    }
+  };
+
+  const handleBatchDelete = async () => {
+    if (selectedItems.size === 0) return;
+    
+    if (window.confirm(`Bạn có chắc chắn muốn xóa ${selectedItems.size} danh mục đã chọn?`)) {
+      setLoading(true);
+      
+      try {
+        // Process deletions one by one
+        const deletePromises = Array.from(selectedItems).map(id =>
+          categoryService.deleteCategory(id)
+            .then(() => ({ id, success: true }))
+            .catch(error => {
+              console.error(`Error deleting category ${id}:`, error);
+              return { id, success: false, error };
+            })
+        );
+        
+        const results = await Promise.all(deletePromises);
+        
+        // Count successes and failures correctly
+        const successful = results.filter(r => r.success === true).length;
+        const failed = results.filter(r => r.success === false).length;
+        
+        if (failed > 0) {
+          toastService.warning(`Đã xóa ${successful} danh mục thành công, ${failed} danh mục thất bại.`);
+        } else {
+          toastService.success(`Đã xóa ${successful} danh mục thành công!`);
+        }
+        
+        // Exit select mode and refresh data
+        setSelectMode(false);
+        setSelectedItems(new Set());
+        fetchAllCategories();
+      } catch (error) {
+        console.error('Error in batch delete:', error);
+        toastService.error('Lỗi khi xóa danh mục hàng loạt');
+      } finally {
+        setLoading(false);
+      }
+    }
+  };
+
   if (loading) return <div className="loading">Loading data...</div>;
 
   return (
@@ -340,10 +416,27 @@ const CategoryList = () => {
               </button>
             </div>
           </form>
-          <button className="add-category-btn" onClick={() => setIsModalOpen(true)}>
-            <PlusIcon />
-            Add Category
+          <button
+            className={`select-mode-btn ${selectMode ? 'active' : ''}`}
+            onClick={toggleSelectMode}
+          >
+            {selectMode ? 'Cancel' : 'Select'}
           </button>
+          {selectMode && (
+            <button 
+              className="batch-delete-btn"
+              onClick={handleBatchDelete}
+              disabled={selectedItems.size === 0}
+            >
+              Delete Selected ({selectedItems.size})
+            </button>
+          )}
+          {!selectMode && (
+            <button className="add-category-btn" onClick={() => setIsModalOpen(true)}>
+              <PlusIcon />
+              Add Category
+            </button>
+          )}
         </div>
       </div>
 
@@ -351,6 +444,16 @@ const CategoryList = () => {
         <table className="categories-table">
           <thead>
             <tr>
+              {selectMode && (
+                <th className="checkbox-column">
+                  <input
+                    type="checkbox"
+                    checked={selectedItems.size === categories.length && categories.length > 0}
+                    onChange={toggleSelectAll}
+                    id="select-all-checkbox"
+                  />
+                </th>
+              )}
               <th onClick={() => handleSort('name')} className="sortable">
                 Name {renderSortIcon('name')}
               </th>
@@ -377,7 +480,17 @@ const CategoryList = () => {
           </thead>
           <tbody>
             {categories.map(category => (
-              <tr key={category.id}>
+              <tr key={category.id} className={selectedItems.has(category.id) ? 'selected-row' : ''}>
+                {selectMode && (
+                  <td className="checkbox-column">
+                    <input
+                      type="checkbox"
+                      checked={selectedItems.has(category.id)}
+                      onChange={() => toggleItemSelection(category.id)}
+                      id={`select-checkbox-${category.id}`}
+                    />
+                  </td>
+                )}
                 <td>{category.name}</td>
                 <td>{category.description}</td>
                 <td>{categoryService.getParentName(allCategories, category.parentId)}</td>
