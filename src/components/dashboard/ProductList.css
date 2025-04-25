@@ -235,6 +235,17 @@
   background: var(--hover-background);
 }
 
+.clickable-row {
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.clickable-row:hover {
+  background-color: var(--hover-background);
+  transform: translateY(-2px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
 .products-table .store-name {
   color: var(--text-color);
   opacity: 0.7;
@@ -286,6 +297,48 @@
   box-sizing: border-box;
   overflow: hidden;
   display: block;
+  cursor: zoom-in;
+  transition: transform 0.2s;
+}
+
+.product-image:hover {
+  transform: scale(1.05);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.image-column {
+  position: relative;
+}
+
+.image-preview-tooltip {
+  position: absolute;
+  z-index: 1000;
+  background: var(--background-color);
+  padding: 8px;
+  border-radius: 8px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+  pointer-events: none;
+  animation: fadeIn 0.2s ease-in-out;
+}
+
+.image-preview-tooltip img {
+  max-width: 300px;
+  max-height: 300px;
+  display: block;
+  object-fit: contain;
+  width: auto;
+  height: auto;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .store-name {

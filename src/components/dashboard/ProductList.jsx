@@ -31,6 +31,13 @@ const ProductList = () => {
         storeId: ''
     });
     
+    // New state for image preview
+    const [imagePreview, setImagePreview] = useState({
+        visible: false,
+        url: '',
+        position: { x: 0, y: 0 }
+    });
+
     // Pagination states
     const [pagination, setPagination] = useState({
         pageIndex: parseInt(searchParams.get('page')) || 1,
@@ -596,6 +603,36 @@ const ProductList = () => {
             : <ChevronDownIcon className="sort-icon active" />;
     };
 
+    // Thêm hàm handleProductClick để xử lý khi click vào sản phẩm
+    const handleProductClick = (productId) => {
+        navigate(`/products/${productId}`);
+    };
+
+    // Handle mouse over image to show preview
+    const handleImageHover = (e, imageUrl) => {
+        if (!imageUrl) return;
+        
+        const rect = e.currentTarget.getBoundingClientRect();
+        const scrollTop = window.scrollY || document.documentElement.scrollTop;
+        
+        setImagePreview({
+            visible: true,
+            url: imageUrl,
+            position: {
+                x: rect.left + rect.width,
+                y: rect.top + scrollTop
+            }
+        });
+    };
+    
+    // Handle mouse leave to hide preview
+    const handleImageLeave = () => {
+        setImagePreview({
+            ...imagePreview,
+            visible: false
+        });
+    };
+
     if (loading) return <div className="loading">Loading data...</div>;
 
     return (
@@ -722,9 +759,13 @@ const ProductList = () => {
                     </thead>
                     <tbody>
                         {productService.getSortedProducts(products, categories, stores, sortConfig).map(product => (
-                            <tr key={product.id} className={selectedItems.has(product.id) ? 'selected-row' : ''}>
+                            <tr 
+                                key={product.id} 
+                                className={`${selectedItems.has(product.id) ? 'selected-row' : ''} ${!selectMode ? 'clickable-row' : ''}`}
+                                onClick={!selectMode ? () => handleProductClick(product.id) : undefined}
+                            >
                                 {selectMode && (
-                                    <td className="checkbox-column">
+                                    <td className="checkbox-column" onClick={(e) => e.stopPropagation()}>
                                         <input
                                             type="checkbox"
                                             checked={selectedItems.has(product.id)}
@@ -733,7 +774,12 @@ const ProductList = () => {
                                         />
                                     </td>
                                 )}
-                                <td>
+                                <td 
+                                    className="image-column"
+                                    onMouseEnter={(e) => handleImageHover(e, product.imageUrl)}
+                                    onMouseLeave={handleImageLeave}
+                                    onClick={(e) => e.stopPropagation()}
+                                >
                                     <img 
                                         src={product.imageUrl || '/placeholder.png'} 
                                         alt={product.name}
@@ -750,10 +796,11 @@ const ProductList = () => {
                                 <td className="date-column">{productService.formatDate(product.createdAt)}</td>
                                 <td className="date-column">{productService.formatDate(product.updatedAt)}</td>
                                 <td>
-                                    <div className="product-actions">
+                                    <div className="product-actions" onClick={(e) => e.stopPropagation()}>
                                         <button 
                                             className="edit-btn"
-                                            onClick={() => {
+                                            onClick={(e) => {
+                                                e.stopPropagation();
                                                 setSelectedProduct(product);
                                                 setIsEditModalOpen(true);
                                             }}
@@ -763,14 +810,20 @@ const ProductList = () => {
                                         </button>
                                         <button 
                                             className="duplicate-btn"
-                                            onClick={() => handleDuplicateProduct(product)}
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                handleDuplicateProduct(product);
+                                            }}
                                             title="Duplicate"
                                         >
                                             <DocumentDuplicateIcon className="w-5 h-5" />
                                         </button>
                                         <button 
                                             className="delete-btn"
-                                            onClick={() => handleDeleteProduct(product.id)}
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                handleDeleteProduct(product.id);
+                                            }}
                                             title="Delete"
                                         >
                                             <TrashIcon className="w-5 h-5" />
@@ -782,6 +835,19 @@ const ProductList = () => {
                     </tbody>
                 </table>
             </div>
+            
+            {/* Image Preview Tooltip */}
+            {imagePreview.visible && (
+                <div 
+                    className="image-preview-tooltip" 
+                    style={{ 
+                        top: `${imagePreview.position.y}px`,
+                        left: `${imagePreview.position.x}px`
+                    }}
+                >
+                    <img src={imagePreview.url} alt="Product preview" />
+                </div>
+            )}
             
             <Pagination 
                 currentPage={pagination.pageIndex}

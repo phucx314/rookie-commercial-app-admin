@@ -11,6 +11,7 @@ import './App.css';
 import LoginView from './views/LoginView';
 import DashboardView from './views/DashboardView';
 import ProductsView from './views/ProductsView';
+import ProductDetailView from './views/ProductDetailView';
 import StoresView from './views/StoresView';
 import CategoriesView from './views/CategoriesView';
 
@@ -35,6 +36,7 @@ function App() {
             <Route path="dashboard" element={<DashboardView />} />
             <Route path="stores" element={<StoresView />} />
             <Route path="products" element={<ProductsView />} />
+            <Route path="products/:id" element={<ProductDetailView />} />
             <Route path="categories" element={<CategoriesView />} />
             <Route path="orders" element={<div>Orders (Developing)</div>} />
             
