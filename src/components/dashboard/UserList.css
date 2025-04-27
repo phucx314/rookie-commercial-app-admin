@@ -1,0 +1,320 @@
+.user-list {
+  padding: var(--spacing-md);
+}
+
+.user-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--spacing-lg);
+  max-width: 100%;
+  flex-wrap: wrap;
+  gap: var(--spacing-sm);
+}
+
+.user-header h1 {
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-color);
+  margin: 0;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  flex-wrap: wrap;
+}
+
+.search-form-inline {
+  display: flex;
+  align-items: center;
+  max-width: 300px;
+}
+
+.search-input-container {
+  position: relative;
+  display: flex;
+  flex: 1;
+  max-width: 300px;
+  background-color: var(--background-color);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-md);
+  overflow: hidden;
+  align-items: center;
+}
+
+.search-input {
+  flex: 1;
+  padding: var(--input-padding);
+  padding-right: 30px;
+  border: none !important;
+  border-radius: var(--border-radius-md) !important;
+  background: transparent !important;
+  color: var(--text-color);
+  font-size: var(--font-size-xs);
+  transition: all var(--transition-fast);
+  height: 36px;
+}
+
+.search-input:focus {
+  outline: none;
+  box-shadow: none;
+}
+
+.search-input-container:focus-within {
+  border-color: var(--text-color);
+  box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.1);
+}
+
+.search-button-inside {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 30px !important;
+  background-color: transparent !important;
+  color: var(--text-color) !important;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition-fast);
+  padding: 6px !important;
+  margin: 0;
+  height: 24px;
+}
+
+.search-icon {
+  width: 22px !important;
+  height: 22px !important;
+  color: var(--text-color) !important;
+}
+
+.users-table-container {
+  width: 100%;
+  overflow-x: auto;
+  background: var(--card-background);
+  border-radius: var(--border-radius-lg);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  min-width: 0;
+  max-width: 100%;
+}
+
+.users-table {
+  width: 100%;
+  min-width: 800px;
+  border-collapse: collapse;
+}
+
+.users-table th {
+  background: var(--background-color);
+  color: var(--text-color);
+  font-weight: var(--font-weight-semibold);
+  padding: var(--table-cell-padding);
+  text-align: left;
+  border-bottom: 1px solid var(--border-color);
+  font-size: var(--font-size-xs);
+}
+
+.users-table td {
+  padding: var(--table-cell-padding);
+  border-bottom: 1px solid var(--border-color);
+  color: var(--text-color);
+  font-size: var(--font-size-xs);
+}
+
+.users-table tr:hover {
+  background: var(--hover-background);
+}
+
+.user-actions {
+  display: flex;
+  gap: var(--spacing-xs);
+}
+
+.user-actions button {
+  padding: var(--spacing-xs);
+  border: none;
+  border-radius: var(--border-radius-sm);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition-fast);
+}
+
+.user-actions button.status-toggle-btn {
+  background-color: var(--hover-background);
+  color: var(--text-color);
+}
+
+.user-actions button.status-toggle-btn.activate {
+  color: #10b981; /* Green color for activate */
+}
+
+.user-actions button.status-toggle-btn.deactivate {
+  color: #ef4444; /* Red color for deactivate */
+}
+
+.user-actions button.delete-btn {
+  background-color: var(--hover-background);
+  color: #ef4444; /* Red color for delete */
+}
+
+.user-actions button svg {
+  width: var(--icon-size-sm);
+  height: var(--icon-size-sm);
+}
+
+/* Role badges */
+.role-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: var(--border-radius-sm);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+}
+
+.badge-admin {
+  background-color: #818cf8; /* Indigo */
+  color: white;
+}
+
+.badge-seller {
+  background-color: #f59e0b; /* Amber */
+  color: white;
+}
+
+.badge-customer {
+  background-color: #6b7280; /* Gray */
+  color: white;
+}
+
+/* Status badges */
+.status-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: var(--border-radius-sm);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+}
+
+.status-badge.active {
+  background-color: #10b981; /* Green */
+  color: white;
+}
+
+.status-badge.inactive {
+  background-color: #ef4444; /* Red */
+  color: white;
+}
+
+.sortable {
+  cursor: pointer;
+  user-select: none;
+  position: relative;
+  padding-right: 24px !important;
+}
+
+.sortable:hover {
+  background-color: var(--hover-background);
+}
+
+.sort-icon {
+  width: var(--icon-size-sm);
+  height: var(--icon-size-sm);
+  position: absolute;
+  right: 4px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-color);
+  opacity: 0.5;
+}
+
+.sort-icon.active {
+  color: var(--text-color);
+  opacity: 1;
+}
+
+.date-column {
+  white-space: nowrap;
+  font-family: monospace;
+  color: var(--text-color);
+  opacity: 0.7;
+  font-size: var(--font-size-xs);
+}
+
+/* Pagination info */
+.pagination-info {
+  text-align: center;
+  margin-top: var(--spacing-sm);
+  color: var(--text-color);
+  opacity: 0.7;
+  font-size: var(--font-size-xs);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: var(--spacing-md);
+}
+
+.page-size-selector {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  margin-left: var(--spacing-md);
+}
+
+.page-size-selector label {
+  font-size: var(--font-size-xs);
+  color: var(--text-color);
+  opacity: 0.7;
+}
+
+.page-size-select {
+  background-color: var(--background-color);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-sm);
+  color: var(--text-color);
+  font-size: var(--font-size-xs);
+  padding: 2px 5px;
+  cursor: pointer;
+  min-width: 50px;
+}
+
+.page-size-select:focus {
+  outline: none;
+  border-color: var(--text-color);
+}
+
+/* Loading styles */
+.loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 200px;
+  font-size: var(--font-size-md);
+  color: var(--text-color);
+  opacity: 0.7;
+}
+
+/* Thêm thanh scroll tùy chỉnh */
+.users-table-container::-webkit-scrollbar {
+  height: 8px;
+}
+
+.users-table-container::-webkit-scrollbar-track {
+  background: var(--background-color);
+  border-radius: 4px;
+}
+
+.users-table-container::-webkit-scrollbar-thumb {
+  background: var(--hover-background);
+  border-radius: 4px;
+  opacity: 0.5;
+}
+
+.users-table-container::-webkit-scrollbar-thumb:hover {
+  opacity: 0.7;
+} 
