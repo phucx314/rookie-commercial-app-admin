@@ -136,7 +136,7 @@ const Dashboard = () => {
         {/* Combined Chart */}
         <div className="chart-section">
           <div className="chart-card">
-            <h3>Chart of orders and revenue (last 7 days)</h3>
+            <h3>Chart of Orders and Revenue (Last 7 Days)</h3>
             <div className="chart-wrapper">
               <Line data={combinedChartData} options={combinedChartOptions} />
             </div>
@@ -163,7 +163,7 @@ const Dashboard = () => {
           </div>
 
           <div className="ranking-card">
-            <h3>Top 3 Products by Revenue</h3>
+            <h3>Top Products by Revenue</h3>
             <div className="ranking-list">
               {topProducts.map((product, index) => (
                 <div key={product.id} className="ranking-item">
@@ -180,7 +180,7 @@ const Dashboard = () => {
           </div>
 
           <div className="ranking-card">
-            <h3>Top 3 Categories by Sold Quantity</h3>
+            <h3>Top Categories by Sold Quantity</h3>
             <div className="ranking-list">
               {topCategories.map((category, index) => (
                 <div key={category.id} className="ranking-item">

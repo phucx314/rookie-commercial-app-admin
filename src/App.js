@@ -14,6 +14,12 @@ import ProductsView from './views/ProductsView';
 import ProductDetailView from './views/ProductDetailView';
 import StoresView from './views/StoresView';
 import CategoriesView from './views/CategoriesView';
+import OrdersView from './views/OrdersView';
+import UsersView from './views/UsersView';
+import ReviewsView from './views/ReviewsView';
+
+// Import Dashboard Components
+import { CreateInStoreOrder } from './components/dashboard';
 
 function App() {
   return (
@@ -38,7 +44,10 @@ function App() {
             <Route path="products" element={<ProductsView />} />
             <Route path="products/:id" element={<ProductDetailView />} />
             <Route path="categories" element={<CategoriesView />} />
-            <Route path="orders" element={<div>Orders (Developing)</div>} />
+            <Route path="orders" element={<OrdersView />} />
+            <Route path="create-in-store-order" element={<CreateInStoreOrder />} />
+            <Route path="users" element={<UsersView />} />
+            <Route path="reviews" element={<ReviewsView />} />
             
             {/* 404 - Not Found */}
             <Route path="*" element={

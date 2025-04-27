@@ -38,7 +38,7 @@ class DashboardService {
         };
     }
 
-    getTopStores(stores, orders, products, limit = 3) {
+    getTopStores(stores, orders, products, limit = 10) {
         return stores
             .map(store => ({
                 ...store,
@@ -58,7 +58,7 @@ class DashboardService {
             .slice(0, limit);
     }
 
-    getTopProducts(products, orders, limit = 3) {
+    getTopProducts(products, orders, limit = 10) {
         return products
             .map(product => ({
                 ...product,
@@ -71,7 +71,7 @@ class DashboardService {
             .slice(0, limit);
     }
 
-    getTopCategories(categories, orders, products, limit = 3) {
+    getTopCategories(categories, orders, products, limit = 10) {
         return categories
             .map(category => ({
                 ...category,
@@ -151,7 +151,7 @@ class DashboardService {
     }
 
     formatCurrency(value) {
-        return new Intl.NumberFormat("vi-VN", {
+        return new Intl.NumberFormat("en-US", {
             style: "currency",
             currency: "VND",
         }).format(value);
@@ -182,7 +182,7 @@ class DashboardService {
             datasets: [
                 {
                     type: 'bar',
-                    label: 'Số lượng đơn hàng',
+                    label: 'Number of Orders',
                     data: ordersByDate.map(item => item.count),
                     backgroundColor: colors.barBackgroundColor,
                     borderColor: colors.barBorderColor,
@@ -191,7 +191,7 @@ class DashboardService {
                 },
                 {
                     type: 'line',
-                    label: 'Doanh thu (VNĐ)',
+                    label: 'Revenue (VND)',
                     data: revenueByDate.map(item => item.revenue),
                     backgroundColor: colors.lineBackgroundColor,
                     borderColor: colors.lineBorderColor,
@@ -256,7 +256,7 @@ class DashboardService {
                     },
                     title: {
                         display: true,
-                        text: 'Số đơn hàng',
+                        text: 'Number of Orders',
                         color: colors.textColor
                     },
                     beginAtZero: true
@@ -279,7 +279,7 @@ class DashboardService {
                     },
                     title: {
                         display: true,
-                        text: 'Doanh thu (VNĐ)',
+                        text: 'Revenue (VND)',
                         color: colors.textColor
                     },
                     beginAtZero: true

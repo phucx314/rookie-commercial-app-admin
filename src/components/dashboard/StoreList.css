@@ -31,7 +31,7 @@
   padding: 8px 12px;
   background-color: var(--card-background);
   color: var(--text-color);
-  border: 1px solid var(--border-color);
+  border: 1.5px solid var(--border-color);
   border-radius: var(--border-radius-xl);
   cursor: pointer;
   font-size: var(--font-size-xs);
@@ -65,7 +65,7 @@
   padding: 8px 12px;
   background-color: var(--card-background);
   color: var(--text-color);
-  border: 1px solid var(--border-color);
+  border: 1.5px solid var(--border-color);
   border-radius: var(--border-radius-xl);
   cursor: pointer;
   font-size: var(--font-size-xs);
@@ -99,7 +99,7 @@
 .search-input {
   width: 100%;
   padding: 8px 36px 8px 12px;
-  border: 1px solid var(--border-color);
+  border: 1.5px solid var(--border-color);
   border-radius: var(--border-radius-xl);
   background: var(--card-background);
   font-family: var(--font-family);
@@ -137,7 +137,7 @@
 
 .store-filters button {
   padding: var(--spacing-xs) var(--spacing-md);
-  border: 1px solid var(--border-color);
+  border: 1.5px solid var(--border-color);
   border-radius: var(--border-radius-xl);
   background: var(--card-background);
   cursor: pointer;
@@ -173,14 +173,14 @@
   flex-direction: column;
   align-items: center;
   text-align: center;
-  border: 1px solid var(--border-color);
+  border: 1.5px solid var(--border-color);
   transition: transform 0.2s ease;
   min-width: 200px;
   position: relative;
 }
 
 .store-card.selected-card {
-  border: 2px solid var(--text-color);
+  border: 1px solid var(--text-color);
   box-shadow: 0 0 0 1px var(--text-color);
 }
 
@@ -322,7 +322,7 @@
 .edit-store-btn {
   background: var(--background-color);
   color: var(--text-color);
-  border: 1px solid var(--border-color);
+  border: 1.5px solid var(--border-color);
 }
 
 .view-details-btn:hover,
@@ -369,7 +369,7 @@
 .page-size-select {
   padding: 4px 8px;
   border-radius: var(--border-radius-sm);
-  border: 1px solid var(--border-color);
+  border: 1.5px solid var(--border-color);
   background-color: var(--card-background);
   color: var(--text-color);
   font-size: var(--font-size-xs);
@@ -421,7 +421,7 @@
 .form-group textarea {
   width: 100%;
   padding: 10px;
-  border: 1px solid var(--border-color);
+  border: 1.5px solid var(--border-color);
   border-radius: var(--border-radius-sm);
   font-size: var(--font-size-xs);
   background-color: var(--background-color);
@@ -452,7 +452,7 @@
 .modal-actions button:first-child {
   background-color: var(--background-color);
   color: var(--text-color);
-  border: 1px solid var(--border-color);
+  border: 1.5px solid var(--border-color);
 }
 
 .modal-actions button:last-child {

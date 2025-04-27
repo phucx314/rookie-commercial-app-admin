@@ -1,5 +1,5 @@
 .dashboard {
-  padding: 24px;
+  padding: 0px;
 }
 
 .dashboard h1 {
@@ -17,7 +17,7 @@
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 24px;
-  margin-bottom: 32px;
+  margin-bottom: 24px;
 }
 
 .stat-card {
@@ -87,7 +87,7 @@
 .chart-card {
   background-color: var(--card-background);
   border-radius: var(--border-radius-xl);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  /* box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1); */
   padding: var(--spacing-lg);
   border: 1px solid var(--border-color);
   backdrop-filter: blur(10px);
@@ -168,7 +168,7 @@
   align-items: center;
   gap: 12px;
   padding: 8px;
-  background: var(--background-color);
+  background: var(--hover-background);
   border-radius: 8px;
   transition: transform 0.2s;
 }
