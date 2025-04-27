@@ -96,7 +96,14 @@ const UserList = () => {
   const fetchUsers = async () => {
     try {
       setLoading(true);
-      const response = await axios.get('/user');
+      
+      // Tạo URL với tham số tìm kiếm nếu có
+      let url = '/user';
+      if (searchTerm) {
+        url = `/user/search?search=${encodeURIComponent(searchTerm)}`;
+      }
+      
+      const response = await axios.get(url);
       const data = response.data;
       
       // Process the data to ensure isActive field exists (default to true if missing)
