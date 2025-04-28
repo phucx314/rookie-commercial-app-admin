@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { ArrowLeftIcon } from '@heroicons/react/24/outline';
 import './CreateInStoreOrder.css';
 import orderService from '../../services/order.service';
 import productService from '../../services/product.service';
@@ -280,47 +281,64 @@ const CreateInStoreOrder = () => {
   return (
     <div className="create-order-container">
       <div className="create-order-header">
-        <h1>Create In-Store Order</h1>
-        <p>Enter order information and select products to create a new order</p>
+        <div className="create-order-header-actions">
+          <button
+            className="create-order-back-button"
+            onClick={() => navigate('/orders')}
+          >
+            <ArrowLeftIcon className="create-order-back-icon" />
+            Back to Orders
+          </button>
+        </div>
+        <div>
+          <h1>Create In-Store Order</h1>
+          <p>Create a new order for a walk-in customer</p>
+        </div>
       </div>
 
-      <div className="order-tabs">
-        <div className="tab-list">
+      <div className="create-order-tabs">
+        <div className="create-order-tab-list">
           <div 
-            className={`tab-item ${activeTab === '1' ? 'active' : ''}`} 
-            onClick={() => setActiveTab('1')}
+            className={`create-order-tab-item ${activeTab === '1' ? 'active' : ''}`}
+            onClick={() => !selectedCustomer && setActiveTab('1')}
           >
             1. Select Customer
           </div>
           <div 
-            className={`tab-item ${activeTab === '2' ? 'active' : ''}`} 
-            onClick={() => setActiveTab('2')}
+            className={`create-order-tab-item ${activeTab === '2' ? 'active' : ''}`}
+            onClick={() => (selectedCustomer || isNewCustomer) && setActiveTab('2')}
           >
-            2. Select Products
+            2. Add Products
           </div>
           <div 
-            className={`tab-item ${activeTab === '3' ? 'active' : ''}`} 
-            onClick={() => setActiveTab('3')}
+            className={`create-order-tab-item ${activeTab === '3' ? 'active' : ''}`}
+            onClick={() => selectedProducts.length > 0 && setActiveTab('3')}
           >
-            3. Confirm Order
+            3. Review & Checkout
           </div>
         </div>
 
-        <div className="tab-content">
+        <div className="create-order-tab-content">
           {activeTab === '1' && (
-            <>
-              <div className="search-section">
-                <h2>Search Existing Customers</h2>
-                <div className="search-bar">
+            <div>
+              <div className="create-order-search-section">
+                <h2>Search for a Customer</h2>
+                <div className="create-order-search-bar">
+                  <div className="create-order-search-input-container">
                   <input
                     type="text"
-                    className="create-order-search-input"
-                    placeholder="Search by username or email"
+                      className="create-order-search-input"
+                      placeholder="Search by email or username"
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
+                      onKeyDown={(e) => e.key === 'Enter' && handleSearchCustomers()}
                   />
-                  <button className="search-button" onClick={handleSearchCustomers}>
-                    🔍 Search
+                  </div>
+                  <button
+                    className="create-order-search-button"
+                    onClick={handleSearchCustomers}
+                  >
+                    Search
                   </button>
                 </div>
 
@@ -330,20 +348,22 @@ const CreateInStoreOrder = () => {
                       <thead>
                         <tr>
                           <th>Username</th>
-                          <th>Email</th>
                           <th>Full Name</th>
-                          <th>Actions</th>
+                          <th>Email</th>
+                          <th>Phone</th>
+                          <th>Action</th>
                         </tr>
                       </thead>
                       <tbody>
-                        {customers.map(customer => (
+                        {customers.map((customer) => (
                           <tr key={customer.id}>
                             <td>{customer.username}</td>
-                            <td>{customer.email}</td>
                             <td>{customer.fullName}</td>
+                            <td>{customer.email}</td>
+                            <td>{customer.phoneNumber || 'N/A'}</td>
                             <td>
                               <button 
-                                className="select-button"
+                                className="customer-select-button"
                                 onClick={() => handleSelectCustomer(customer)}
                               >
                                 Select
@@ -355,94 +375,140 @@ const CreateInStoreOrder = () => {
                     </table>
                   </div>
                 )}
+
+                <div className="create-order-divider">
+                  <span className="create-order-divider-text">OR</span>
               </div>
 
-              <hr className="divider" />
-              <div className="divider-text">    </div>
-
-              <div className="search-section">
-                <h2>Create New Customer</h2>
+                <h2>Create a New Customer</h2>
                 <form onSubmit={handleSubmitNewCustomer}>
-                  <div className="form-group">
-                    <label className="form-label">Username</label>
+                  <div className="create-order-form-group">
+                    <label className="create-order-form-label">Username*</label>
                     <input 
                       type="text"
-                      className="form-input"
+                      className="create-order-form-input"
                       name="username"
                       value={newCustomerForm.username}
                       onChange={handleNewCustomerChange}
                     />
-                    {newCustomerErrors.username && <div className="error-message">{newCustomerErrors.username}</div>}
+                    {newCustomerErrors.username && (
+                      <div className="create-order-error-message">{newCustomerErrors.username}</div>
+                    )}
                   </div>
-
-                  <div className="form-group">
-                    <label className="form-label">Email</label>
+                  <div className="create-order-form-group">
+                    <label className="create-order-form-label">Email*</label>
                     <input 
                       type="email"
-                      className="form-input"
+                      className="create-order-form-input"
                       name="email"
                       value={newCustomerForm.email}
                       onChange={handleNewCustomerChange}
                     />
-                    {newCustomerErrors.email && <div className="error-message">{newCustomerErrors.email}</div>}
+                    {newCustomerErrors.email && (
+                      <div className="create-order-error-message">{newCustomerErrors.email}</div>
+                    )}
                   </div>
-
-                  <div className="form-group">
-                    <label className="form-label">Full Name</label>
+                  <div className="create-order-form-group">
+                    <label className="create-order-form-label">Full Name*</label>
                     <input 
                       type="text"
-                      className="form-input"
+                      className="create-order-form-input"
                       name="fullName"
                       value={newCustomerForm.fullName}
                       onChange={handleNewCustomerChange}
                     />
-                    {newCustomerErrors.fullName && <div className="error-message">{newCustomerErrors.fullName}</div>}
+                    {newCustomerErrors.fullName && (
+                      <div className="create-order-error-message">{newCustomerErrors.fullName}</div>
+                    )}
                   </div>
-
-                  <div className="form-group">
-                    <label className="form-label">Phone Number</label>
+                  <div className="create-order-form-group">
+                    <label className="create-order-form-label">Phone Number</label>
                     <input 
                       type="text"
-                      className="form-input"
+                      className="create-order-form-input"
                       name="phoneNumber"
                       value={newCustomerForm.phoneNumber}
                       onChange={handleNewCustomerChange}
                     />
                   </div>
-
-                  <div className="form-group">
-                    <label className="form-label">Address</label>
-                    <textarea 
-                      className="form-input"
+                  <div className="create-order-form-group">
+                    <label className="create-order-form-label">Address</label>
+                    <input
+                      type="text"
+                      className="create-order-form-input"
                       name="address"
-                      rows="3"
                       value={newCustomerForm.address}
                       onChange={handleNewCustomerChange}
-                    ></textarea>
+                    />
                   </div>
 
                   <button className="create-customer-button" type="submit">
-                    👤 Create New Customer and Continue
+                    Create & Select
                   </button>
                 </form>
               </div>
-            </>
+            </div>
           )}
 
           {activeTab === '2' && (
-            <>
-              <div className="search-section">
-                <h2>Search Products</h2>
-                <div className="search-bar">
+            <div>
+              {(selectedCustomer || isNewCustomer) && (
+                <div className="selected-customer">
+                  <h3>Selected Customer</h3>
+                  <div className="customer-info">
+                    {selectedCustomer ? (
+                      <>
+                        <div className="customer-info-item">
+                          <p className="customer-info-label">Username</p>
+                          <p>{selectedCustomer.username}</p>
+                        </div>
+                        <div className="customer-info-item">
+                          <p className="customer-info-label">Full Name</p>
+                          <p>{selectedCustomer.fullName}</p>
+                        </div>
+                        <div className="customer-info-item">
+                          <p className="customer-info-label">Email</p>
+                          <p>{selectedCustomer.email}</p>
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        <div className="customer-info-item">
+                          <p className="customer-info-label">Username</p>
+                          <p>{newCustomerForm.username}</p>
+                        </div>
+                        <div className="customer-info-item">
+                          <p className="customer-info-label">Full Name</p>
+                          <p>{newCustomerForm.fullName}</p>
+                        </div>
+                        <div className="customer-info-item">
+                          <p className="customer-info-label">Email</p>
+                          <p>{newCustomerForm.email}</p>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              <div className="create-order-search-section">
+                <h2>Search for Products</h2>
+                <div className="create-order-search-bar">
+                  <div className="create-order-search-input-container">
                   <input
                     type="text"
-                    className="create-order-search-input"
-                    placeholder="Search products by name"
+                      className="create-order-search-input"
+                      placeholder="Search by product name"
                     value={productSearchTerm}
                     onChange={(e) => setProductSearchTerm(e.target.value)}
+                      onKeyDown={(e) => e.key === 'Enter' && handleSearchProducts()}
                   />
-                  <button className="search-button" onClick={handleSearchProducts}>
-                    🔍 Search
+                  </div>
+                  <button
+                    className="create-order-search-button"
+                    onClick={handleSearchProducts}
+                  >
+                    Search
                   </button>
                 </div>
 
@@ -450,25 +516,39 @@ const CreateInStoreOrder = () => {
                   <table className="product-table">
                     <thead>
                       <tr>
-                        <th>Product Name</th>
+                        <th>Name</th>
+                        <th>SKU</th>
+                        <th>Category</th>
                         <th>Price</th>
                         <th>Stock</th>
-                        <th>Actions</th>
+                        <th>Quantity</th>
+                        <th>Action</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {products.map(product => (
+                      {products.map((product) => (
                         <tr key={product.id}>
                           <td>{product.name}</td>
-                          <td>${product.price.toLocaleString()}</td>
+                          <td>{product.sku || 'N/A'}</td>
+                          <td>{product.categoryName || 'N/A'}</td>
+                          <td>{productService.formatPrice(product.price)}</td>
                           <td>{product.stockQuantity}</td>
                           <td>
+                            <input
+                              type="number"
+                              className="create-order-quantity-input"
+                              defaultValue={1}
+                              min={1}
+                              max={product.stockQuantity}
+                            />
+                          </td>
+                          <td>
                             <button
-                              className="add-button"
+                              className="product-add-button"
                               onClick={() => handleAddToCart(product)}
-                              disabled={product.stockQuantity <= 0}
+                              disabled={product.stockQuantity === 0}
                             >
-                              ➕ Add
+                              Add
                             </button>
                           </td>
                         </tr>
@@ -478,223 +558,265 @@ const CreateInStoreOrder = () => {
                 </div>
               </div>
 
-              <div className="selected-products">
-                <h3>Cart</h3>
-                {selectedProducts.length > 0 ? (
-                  <>
-                    <table className="cart-table">
+              {selectedProducts.length > 0 && (
+                <div className="create-order-selected-products">
+                  <h3>Selected Products</h3>
+                  <table className="create-order-cart-table">
                       <thead>
                         <tr>
-                          <th>Product Name</th>
-                          <th>Price</th>
-                          <th>Quantity</th>
-                          <th>Subtotal</th>
-                          <th>Actions</th>
+                        <th>Product</th>
+                        <th>Price</th>
+                        <th>Quantity</th>
+                        <th>Subtotal</th>
+                        <th>Action</th>
                         </tr>
                       </thead>
                       <tbody>
-                        {selectedProducts.map(product => (
+                      {selectedProducts.map((product) => (
                           <tr key={product.id}>
                             <td>{product.name}</td>
-                            <td>${product.price.toLocaleString()}</td>
+                          <td>{productService.formatPrice(product.price)}</td>
                             <td>
                               <input
                                 type="number"
-                                className="quantity-input"
-                                min="1"
+                              className="create-order-quantity-input"
+                              value={product.quantity}
+                              onChange={(e) => handleChangeQuantity(product.id, parseInt(e.target.value))}
+                              min={1}
                                 max={product.stockQuantity}
-                                value={product.quantity}
-                                onChange={(e) => handleChangeQuantity(product.id, parseInt(e.target.value, 10))}
                               />
                             </td>
-                            <td>${(product.price * product.quantity).toLocaleString()}</td>
+                          <td>{productService.formatPrice(product.price * product.quantity)}</td>
                             <td>
                               <button
-                                className="remove-button"
+                              className="product-remove-button"
                                 onClick={() => handleRemoveProduct(product.id)}
                               >
-                                ❌ Remove
+                              Remove
                               </button>
                             </td>
                           </tr>
                         ))}
                       </tbody>
-                      <tfoot>
-                        <tr>
-                          <td colSpan={3}><strong>Total</strong></td>
-                          <td><strong>${totalAmount.toLocaleString()}</strong></td>
-                          <td></td>
-                        </tr>
-                      </tfoot>
                     </table>
+                  <div className="create-order-total">
+                    <span>Total</span>
+                    <span>{productService.formatPrice(totalAmount)}</span>
+                  </div>
+                </div>
+              )}
 
-                    <div className="actions">
-                      <button className="cancel-button" onClick={() => setActiveTab('1')}>
-                        Back
+              <div className="create-order-actions">
+                <button
+                  className="order-cancel-button"
+                  onClick={() => setActiveTab('1')}
+                  type="button"
+                >
+                  Back
                       </button>
-                      <button className="create-button" onClick={() => setActiveTab('3')}>
-                        Continue
+                <button
+                  className="order-create-button"
+                  onClick={() => selectedProducts.length > 0 && setActiveTab('3')}
+                  type="button"
+                  disabled={selectedProducts.length === 0}
+                >
+                  Continue
                       </button>
-                    </div>
-                  </>
-                ) : (
-                  <p>No products selected</p>
-                )}
               </div>
-            </>
+            </div>
           )}
 
           {activeTab === '3' && (
-            <div className="order-summary">
-              <h3>Order Information</h3>
-              <form onSubmit={handleCreateOrder}>
-                <div className="form-group">
-                  <label className="form-label">Shipping Address</label>
-                  <textarea 
-                    className="form-input"
-                    name="shippingAddress"
-                    rows="3"
-                    value={formValues.shippingAddress}
-                    onChange={handleInputChange}
-                  ></textarea>
-                  {formErrors.shippingAddress && <div className="error-message">{formErrors.shippingAddress}</div>}
+            <div>
+              {(selectedCustomer || isNewCustomer) && (
+                <div className="selected-customer">
+                  <h3>Customer</h3>
+                  <div className="customer-info">
+                    {selectedCustomer ? (
+                      <>
+                        <div className="customer-info-item">
+                          <p className="customer-info-label">Username</p>
+                          <p>{selectedCustomer.username}</p>
+                        </div>
+                        <div className="customer-info-item">
+                          <p className="customer-info-label">Full Name</p>
+                          <p>{selectedCustomer.fullName}</p>
+                        </div>
+                        <div className="customer-info-item">
+                          <p className="customer-info-label">Email</p>
+                          <p>{selectedCustomer.email}</p>
                 </div>
-
-                <div className="form-group">
-                  <label className="form-label">Order Status</label>
-                  <div className="payment-options">
-                    <div className="payment-option">
-                      <input 
-                        type="radio" 
-                        id="status-processing" 
-                        name="status" 
-                        value="Processing" 
-                        checked={formValues.status === 'Processing'}
-                        onChange={handleInputChange}
-                      />
-                      <label htmlFor="status-processing">Processing</label>
+                      </>
+                    ) : (
+                      <>
+                        <div className="customer-info-item">
+                          <p className="customer-info-label">Username</p>
+                          <p>{newCustomerForm.username}</p>
                     </div>
-                    <div className="payment-option">
-                      <input 
-                        type="radio" 
-                        id="status-shipped" 
-                        name="status" 
-                        value="Shipped" 
-                        checked={formValues.status === 'Shipped'}
-                        onChange={handleInputChange}
-                      />
-                      <label htmlFor="status-shipped">Shipped</label>
+                        <div className="customer-info-item">
+                          <p className="customer-info-label">Full Name</p>
+                          <p>{newCustomerForm.fullName}</p>
                     </div>
-                    <div className="payment-option">
-                      <input 
-                        type="radio" 
-                        id="status-delivered" 
-                        name="status" 
-                        value="Delivered" 
-                        checked={formValues.status === 'Delivered'}
-                        onChange={handleInputChange}
-                      />
-                      <label htmlFor="status-delivered">Delivered</label>
+                        <div className="customer-info-item">
+                          <p className="customer-info-label">Email</p>
+                          <p>{newCustomerForm.email}</p>
                     </div>
+                      </>
+                    )}
                   </div>
                 </div>
+              )}
 
-                <div className="form-group">
-                  <label className="form-label">Payment Status</label>
-                  <div className="payment-options">
-                    <div className="payment-option">
+              <div className="create-order-selected-products">
+                <h3>Order Items</h3>
+                <table className="create-order-cart-table">
+                  <thead>
+                    <tr>
+                      <th>Product</th>
+                      <th>Price</th>
+                      <th>Quantity</th>
+                      <th>Subtotal</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {selectedProducts.map((product) => (
+                      <tr key={product.id}>
+                        <td>{product.name}</td>
+                        <td>{productService.formatPrice(product.price)}</td>
+                        <td>{product.quantity}</td>
+                        <td>{productService.formatPrice(product.price * product.quantity)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+                <div className="create-order-total">
+                  <span>Total</span>
+                  <span>{productService.formatPrice(totalAmount)}</span>
+                </div>
+                    </div>
+
+              <div className="create-order-summary">
+                <h3>Order Details</h3>
+                <form onSubmit={handleCreateOrder}>
+                  <div className="create-order-form-group">
+                    <label className="create-order-form-label">Shipping Address*</label>
                       <input 
-                        type="radio" 
-                        id="payment-status-pending" 
-                        name="paymentStatus" 
-                        value="Pending" 
-                        checked={formValues.paymentStatus === 'Pending'}
+                      type="text"
+                      className="create-order-form-input"
+                      name="shippingAddress"
+                      value={formValues.shippingAddress}
                         onChange={handleInputChange}
                       />
-                      <label htmlFor="payment-status-pending">Pending</label>
-                    </div>
-                    <div className="payment-option">
-                      <input 
-                        type="radio" 
-                        id="payment-status-paid" 
-                        name="paymentStatus" 
-                        value="Paid" 
-                        checked={formValues.paymentStatus === 'Paid'}
-                        onChange={handleInputChange}
-                      />
-                      <label htmlFor="payment-status-paid">Paid</label>
-                    </div>
+                    {formErrors.shippingAddress && (
+                      <div className="create-order-error-message">{formErrors.shippingAddress}</div>
+                    )}
                   </div>
+
+                  <div className="create-order-form-group">
+                    <label className="create-order-form-label">Order Status</label>
+                    <select
+                      className="create-order-form-input"
+                      name="status"
+                      value={formValues.status}
+                      onChange={handleInputChange}
+                    >
+                      <option value="Pending">Pending</option>
+                      <option value="Processing">Processing</option>
+                      <option value="Shipped">Shipped</option>
+                      <option value="Delivered">Delivered</option>
+                      <option value="Cancelled">Cancelled</option>
+                      <option value="Returned">Returned</option>
+                    </select>
                 </div>
 
-                <div className="form-group">
-                  <label className="form-label">Payment Method</label>
-                  <div className="payment-options">
-                    <div className="payment-option">
+                  <div className="create-order-payment-options">
+                    <label className="create-order-form-label">Payment Method</label>
+                    <div className="create-order-payment-option">
                       <input 
                         type="radio" 
-                        id="payment-method-cash" 
+                        id="cashOnDelivery"
                         name="paymentMethod" 
                         value="CashOnDelivery" 
                         checked={formValues.paymentMethod === 'CashOnDelivery'}
                         onChange={handleInputChange}
                       />
-                      <label htmlFor="payment-method-cash">Cash</label>
+                      <label htmlFor="cashOnDelivery">Cash On Delivery</label>
                     </div>
-                    <div className="payment-option">
+                    <div className="create-order-payment-option">
                       <input 
                         type="radio" 
-                        id="payment-method-card" 
+                        id="bankTransfer"
                         name="paymentMethod" 
-                        value="CreditCard" 
-                        checked={formValues.paymentMethod === 'CreditCard'}
-                        onChange={handleInputChange}
-                      />
-                      <label htmlFor="payment-method-card">Credit Card</label>
-                    </div>
-                    <div className="payment-option">
-                      <input 
-                        type="radio" 
-                        id="payment-method-bank" 
-                        name="paymentMethod" 
-                        value="BankTransfer" 
+                        value="BankTransfer"
                         checked={formValues.paymentMethod === 'BankTransfer'}
                         onChange={handleInputChange}
                       />
-                      <label htmlFor="payment-method-bank">Bank Transfer</label>
+                      <label htmlFor="bankTransfer">Bank Transfer</label>
                     </div>
-                    <div className="payment-option">
+                    <div className="create-order-payment-option">
                       <input 
                         type="radio" 
-                        id="payment-method-ewallet" 
+                        id="creditCard"
+                        name="paymentMethod" 
+                        value="CreditCard"
+                        checked={formValues.paymentMethod === 'CreditCard'}
+                        onChange={handleInputChange}
+                      />
+                      <label htmlFor="creditCard">Credit Card</label>
+                    </div>
+                    <div className="create-order-payment-option">
+                      <input 
+                        type="radio" 
+                        id="eWallet"
                         name="paymentMethod" 
                         value="EWallet" 
                         checked={formValues.paymentMethod === 'EWallet'}
                         onChange={handleInputChange}
                       />
-                      <label htmlFor="payment-method-ewallet">E-Wallet</label>
-                    </div>
+                      <label htmlFor="eWallet">E-Wallet</label>
                   </div>
                 </div>
 
-                <div className="order-total">
-                  <span>Total:</span>
-                  <span>${totalAmount.toLocaleString()}</span>
+                  <div className="create-order-form-group">
+                    <label className="create-order-form-label">Payment Status</label>
+                    <select
+                      className="create-order-form-input"
+                      name="paymentStatus"
+                      value={formValues.paymentStatus}
+                      onChange={handleInputChange}
+                    >
+                      <option value="Pending">Pending</option>
+                      <option value="Paid">Paid</option>
+                      <option value="Failed">Failed</option>
+                      <option value="Refunded">Refunded</option>
+                    </select>
                 </div>
 
-                <div className="actions">
-                  <button type="button" className="cancel-button" onClick={() => setActiveTab('2')}>
-                    Back
+                  <div className="create-order-actions">
+                    <button
+                      className="order-cancel-button"
+                      onClick={() => setActiveTab('2')}
+                      type="button"
+                    >
+                      Back
                   </button>
                   <button 
+                      className="order-create-button"
                     type="submit"
-                    className="create-button" 
-                    disabled={selectedProducts.length === 0 || loading}
+                      disabled={loading}
                   >
-                    {loading ? <span className="loading-spinner"></span> : '🛒'} Create Order
+                      {loading ? (
+                        <>
+                          <span className="loading-spinner"></span>
+                          <span style={{ marginLeft: '8px' }}>Creating...</span>
+                        </>
+                      ) : (
+                        'Create Order'
+                      )}
                   </button>
                 </div>
               </form>
+              </div>
             </div>
           )}
         </div>

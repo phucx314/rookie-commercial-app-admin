@@ -64,7 +64,16 @@ const UserList = () => {
   // Load data on mount and when dependencies change
   useEffect(() => {
     fetchUsers();
-  }, [pagination.pageIndex, pagination.pageSize, sortConfig]);
+  }, [pagination.pageIndex, pagination.pageSize]);
+
+  // Thêm effect riêng cho sortConfig
+  useEffect(() => {
+    if (sortConfig.key && users.length > 0) {
+      // Sắp xếp dữ liệu hiện tại mà không cần gọi API lại
+      const sortedData = getSortedUsers([...users]);
+      setUsers(sortedData);
+    }
+  }, [sortConfig]);
 
   // Check URL params on mount
   useEffect(() => {
@@ -97,7 +106,53 @@ const UserList = () => {
     try {
       setLoading(true);
       
-      // Tạo URL với tham số tìm kiếm nếu có
+      // Sử dụng API phân trang từ server
+      let url;
+      
+      if (searchTerm) {
+        // Nếu có từ khóa tìm kiếm thì dùng API search có phân trang
+        url = `/user/search-paged?pageIndex=${pagination.pageIndex}&pageSize=${pagination.pageSize}&searchTerm=${encodeURIComponent(searchTerm)}`;
+      } else {
+        // Không có từ khóa tìm kiếm thì dùng API phân trang thông thường
+        url = `/user/page?pageIndex=${pagination.pageIndex}&pageSize=${pagination.pageSize}`;
+      }
+      
+      console.log(`Fetching users from: ${url}`);
+      const response = await axios.get(url);
+      const data = response.data;
+      
+      if (!data || !data.items) {
+        console.error('Invalid response format:', data);
+        toastService.error('Định dạng phản hồi không hợp lệ');
+        setUsers([]);
+        return;
+      }
+      
+      // Cập nhật dữ liệu người dùng và thông tin phân trang
+      setUsers(data.items);
+      setPagination({
+        ...pagination,
+        totalCount: data.totalCount,
+        totalPages: data.totalPages || Math.ceil(data.totalCount / pagination.pageSize)
+      });
+    } catch (error) {
+      console.error('Error fetching users:', error);
+      
+      // Nếu API phân trang lỗi, fallback về cách cũ
+      if (error.response && error.response.status === 400) {
+        console.log('Failed to use pagination API, falling back to old method');
+        await fetchAllUsers();
+      } else {
+        toastService.error('Không thể tải dữ liệu người dùng. Vui lòng thử lại sau.');
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Phương thức fallback lấy tất cả users nếu API phân trang lỗi
+  const fetchAllUsers = async () => {
+    try {
       let url = '/user';
       if (searchTerm) {
         url = `/user/search?search=${encodeURIComponent(searchTerm)}`;
@@ -106,10 +161,10 @@ const UserList = () => {
       const response = await axios.get(url);
       const data = response.data;
       
-      // Process the data to ensure isActive field exists (default to true if missing)
+      // Process the data to ensure isActive field exists
       const processedData = data.map(user => ({
         ...user,
-        isActive: user.isActive !== undefined ? user.isActive : true // Default to active if not provided
+        isActive: user.isActive !== undefined ? user.isActive : true
       }));
       
       // Apply sorting
@@ -130,10 +185,9 @@ const UserList = () => {
         totalPages
       });
     } catch (error) {
-      console.error('Error fetching users:', error);
-      toastService.error('Unable to load users. Please try again.');
-    } finally {
-      setLoading(false);
+      console.error('Error in fallback fetch:', error);
+      toastService.error('Không thể tải dữ liệu người dùng. Vui lòng thử lại sau.');
+      setUsers([]);
     }
   };
 
