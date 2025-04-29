@@ -40,6 +40,9 @@ const CreateInStoreOrder = () => {
   // State for order
   const [loading, setLoading] = useState(false);
 
+  // Thêm state lưu quantity nhập cho từng product
+  const [productQuantities, setProductQuantities] = useState({});
+
   useEffect(() => {
     loadInitialProducts();
   }, []);
@@ -52,9 +55,11 @@ const CreateInStoreOrder = () => {
   const loadInitialProducts = async () => {
     try {
       const data = await productService.getAllProducts();
-      setProducts(data);
+      // Đảm bảo luôn là mảng
+      setProducts(Array.isArray(data) ? data : (data.items || []));
     } catch (error) {
       console.error('Unable to load product list', error);
+      setProducts([]);
     }
   };
 
@@ -66,6 +71,9 @@ const CreateInStoreOrder = () => {
       
       if (searchTerm.includes('@')) {
         searchParams.email = searchTerm;
+      } else if (/^\d+$/.test(searchTerm)) {
+        // Tìm kiếm bằng số điện thoại nếu searchTerm chỉ chứa số
+        searchParams.phoneNumber = searchTerm;
       } else {
         searchParams.username = searchTerm;
       }
@@ -83,11 +91,12 @@ const CreateInStoreOrder = () => {
         loadInitialProducts();
         return;
       }
-
       const data = await productService.searchProducts(productSearchTerm);
-      setProducts(data);
+      // Đảm bảo luôn là mảng
+      setProducts(Array.isArray(data) ? data : (data.items || []));
     } catch (error) {
       console.error('Error searching products', error);
+      setProducts([]);
     }
   };
 
@@ -98,18 +107,19 @@ const CreateInStoreOrder = () => {
   };
 
   const handleAddToCart = (product) => {
+    const quantity = parseInt(productQuantities[product.id]) || 1;
     const existingProduct = selectedProducts.find(p => p.id === product.id);
-    
     if (existingProduct) {
-      // Increase quantity if product already in cart
+      // Nếu đã có, cộng thêm quantity
       const updatedProducts = selectedProducts.map(p => 
-        p.id === product.id ? { ...p, quantity: p.quantity + 1 } : p
+        p.id === product.id ? { ...p, quantity: p.quantity + quantity } : p
       );
       setSelectedProducts(updatedProducts);
     } else {
-      // Add new product
-      setSelectedProducts([...selectedProducts, { ...product, quantity: 1 }]);
+      setSelectedProducts([...selectedProducts, { ...product, quantity }]);
     }
+    // Reset input về 1 sau khi add
+    setProductQuantities({ ...productQuantities, [product.id]: 1 });
   };
 
   const handleRemoveProduct = (productId) => {
@@ -328,7 +338,7 @@ const CreateInStoreOrder = () => {
                   <input
                     type="text"
                       className="create-order-search-input"
-                      placeholder="Search by email or username"
+                      placeholder="Search by email, username or phone number"
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                       onKeyDown={(e) => e.key === 'Enter' && handleSearchCustomers()}
@@ -470,6 +480,10 @@ const CreateInStoreOrder = () => {
                           <p className="customer-info-label">Email</p>
                           <p>{selectedCustomer.email}</p>
                         </div>
+                        <div className="customer-info-item">
+                          <p className="customer-info-label">Phone Number</p>
+                          <p>{selectedCustomer.phoneNumber || 'N/A'}</p>
+                        </div>
                       </>
                     ) : (
                       <>
@@ -484,6 +498,10 @@ const CreateInStoreOrder = () => {
                         <div className="customer-info-item">
                           <p className="customer-info-label">Email</p>
                           <p>{newCustomerForm.email}</p>
+                        </div>
+                        <div className="customer-info-item">
+                          <p className="customer-info-label">Phone Number</p>
+                          <p>{newCustomerForm.phoneNumber || 'N/A'}</p>
                         </div>
                       </>
                     )}
@@ -516,6 +534,7 @@ const CreateInStoreOrder = () => {
                   <table className="product-table">
                     <thead>
                       <tr>
+                        <th>Image</th>
                         <th>Name</th>
                         <th>SKU</th>
                         <th>Category</th>
@@ -528,18 +547,26 @@ const CreateInStoreOrder = () => {
                     <tbody>
                       {products.map((product) => (
                         <tr key={product.id}>
+                          <td>
+                            {product.imageUrl ? (
+                              <img src={product.imageUrl} alt={product.name} style={{ width: 48, height: 48, objectFit: 'cover', borderRadius: 4 }} />
+                            ) : (
+                              <div style={{ width: 48, height: 48, background: '#eee', borderRadius: 4 }} />
+                            )}
+                          </td>
                           <td>{product.name}</td>
                           <td>{product.sku || 'N/A'}</td>
-                          <td>{product.categoryName || 'N/A'}</td>
+                          <td>{product.category?.name || product.categoryName || (() => {console.log('No category for product:', product); return 'N/A';})()}</td>
                           <td>{productService.formatPrice(product.price)}</td>
                           <td>{product.stockQuantity}</td>
                           <td>
                             <input
                               type="number"
                               className="create-order-quantity-input"
-                              defaultValue={1}
+                              value={productQuantities[product.id] || 1}
                               min={1}
                               max={product.stockQuantity}
+                              onChange={e => setProductQuantities({ ...productQuantities, [product.id]: e.target.value })}
                             />
                           </td>
                           <td>
@@ -547,8 +574,9 @@ const CreateInStoreOrder = () => {
                               className="product-add-button"
                               onClick={() => handleAddToCart(product)}
                               disabled={product.stockQuantity === 0}
+                              title="Add to cart"
                             >
-                              Add
+                              <span style={{ fontSize: 16, fontWeight: 'bold' }}>+</span>
                             </button>
                           </td>
                         </tr>
@@ -645,14 +673,18 @@ const CreateInStoreOrder = () => {
                         <div className="customer-info-item">
                           <p className="customer-info-label">Email</p>
                           <p>{selectedCustomer.email}</p>
-                </div>
+                        </div>
+                        <div className="customer-info-item">
+                          <p className="customer-info-label">Phone Number</p>
+                          <p>{selectedCustomer.phoneNumber || 'N/A'}</p>
+                        </div>
                       </>
                     ) : (
                       <>
                         <div className="customer-info-item">
                           <p className="customer-info-label">Username</p>
                           <p>{newCustomerForm.username}</p>
-                    </div>
+                </div>
                         <div className="customer-info-item">
                           <p className="customer-info-label">Full Name</p>
                           <p>{newCustomerForm.fullName}</p>
@@ -660,6 +692,10 @@ const CreateInStoreOrder = () => {
                         <div className="customer-info-item">
                           <p className="customer-info-label">Email</p>
                           <p>{newCustomerForm.email}</p>
+                    </div>
+                        <div className="customer-info-item">
+                          <p className="customer-info-label">Phone Number</p>
+                          <p>{newCustomerForm.phoneNumber || 'N/A'}</p>
                     </div>
                       </>
                     )}

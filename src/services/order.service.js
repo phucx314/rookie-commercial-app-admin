@@ -55,6 +55,12 @@ class OrderService {
             
             if (searchParams.email && searchParams.email.trim() !== '') {
                 searchTerm = searchParams.email;
+            } else if (searchParams.phoneNumber && searchParams.phoneNumber.trim() !== '') {
+                // Tìm kiếm bằng số điện thoại
+                const response = await axios.get('/user/search', { 
+                    params: { search: searchParams.phoneNumber } 
+                });
+                return response.data;
             } else if (searchParams.username && searchParams.username.trim() !== '') {
                 searchTerm = searchParams.username;
             } else {

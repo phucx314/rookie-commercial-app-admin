@@ -1,6 +1,9 @@
 import axios from '../api/axios';
 
 class DashboardService {
+    // Thêm constants cho date range
+    MIN_DATE = new Date('2025-03-01');
+    
     async getDashboardData() {
         try {
             const [productsRes, ordersRes, storesRes, categoriesRes] = await Promise.all([
@@ -86,9 +89,13 @@ class DashboardService {
             .slice(0, limit);
     }
 
-    getOrdersByDate(orders, days = 7) {
-        // Tạo một mảng ngày trong khoảng thời gian
-        const dates = this.generateDateRange(days);
+    getOrdersByDateRange(orders, startDate, endDate) {
+        // Đảm bảo startDate và endDate là đối tượng Date
+        const start = new Date(startDate);
+        const end = new Date(endDate);
+        
+        // Tạo mảng các ngày trong khoảng
+        const dates = this.generateDateRange(start, end);
         
         // Nhóm đơn hàng theo ngày
         const ordersByDate = dates.map(date => {
@@ -107,9 +114,13 @@ class DashboardService {
         return ordersByDate;
     }
 
-    getRevenueByDate(orders, days = 7) {
-        // Tạo một mảng ngày trong khoảng thời gian
-        const dates = this.generateDateRange(days);
+    getRevenueByDateRange(orders, startDate, endDate) {
+        // Đảm bảo startDate và endDate là đối tượng Date
+        const start = new Date(startDate);
+        const end = new Date(endDate);
+        
+        // Tạo mảng các ngày trong khoảng
+        const dates = this.generateDateRange(start, end);
         
         // Tính doanh thu theo ngày
         const revenueByDate = dates.map(date => {
@@ -136,18 +147,39 @@ class DashboardService {
         return revenueByDate;
     }
 
-    generateDateRange(days) {
+    generateDateRange(startDate, endDate) {
         const dates = [];
-        const today = new Date();
+        let currentDate = new Date(startDate);
         
-        for (let i = days - 1; i >= 0; i--) {
-            const date = new Date();
-            date.setDate(today.getDate() - i);
-            date.setHours(0, 0, 0, 0);
-            dates.push(date);
+        while (currentDate <= endDate) {
+            dates.push(new Date(currentDate));
+            currentDate.setDate(currentDate.getDate() + 1);
         }
         
         return dates;
+    }
+
+    validateDateRange(startDate, endDate) {
+        const start = new Date(startDate);
+        const end = new Date(endDate);
+        const today = new Date();
+        
+        // Kiểm tra startDate không được trước MIN_DATE
+        if (start < this.MIN_DATE) {
+            throw new Error('Start date cannot be before April 1st, 2025');
+        }
+        
+        // Kiểm tra endDate không được sau today
+        if (end > today) {
+            throw new Error('End date cannot be after today');
+        }
+        
+        // Kiểm tra startDate phải trước hoặc bằng endDate
+        if (start > end) {
+            throw new Error('Start date must be before or equal to end date');
+        }
+        
+        return true;
     }
 
     formatCurrency(value) {

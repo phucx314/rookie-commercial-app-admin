@@ -339,6 +339,7 @@
   border-radius: var(--border-radius-lg);
   border: 1px solid var(--border-color);
   padding: var(--spacing-md);
+  margin-bottom: 32px;
 }
 
 .create-order-selected-products h3 {
@@ -395,6 +396,7 @@
   border: 1px solid var(--border-color);
   padding: var(--spacing-md);
   margin-bottom: var(--spacing-md);
+  margin-top: 32px;
 }
 
 .create-order-summary h3 {
