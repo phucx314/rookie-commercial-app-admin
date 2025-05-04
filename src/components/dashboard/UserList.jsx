@@ -7,7 +7,8 @@ import {
   ChevronDownIcon, 
   MagnifyingGlassIcon,
   CheckCircleIcon,
-  XCircleIcon
+  XCircleIcon,
+  UserPlusIcon
 } from '@heroicons/react/24/outline';
 import Pagination from '../common/Pagination';
 import { toastService } from '../../services';
@@ -35,6 +36,24 @@ const UserList = () => {
     totalCount: 0,
     totalPages: 0
   });
+
+  // State cho modal tạo user mới
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [newUser, setNewUser] = useState({
+    username: '',
+    email: '',
+    password: '',
+    fullName: '',
+    phoneNumber: '',
+    address: ''
+  });
+  
+  // Thêm state cho chức năng tìm kiếm user
+  const [userSearchTerm, setUserSearchTerm] = useState('');
+  const [userSearchResults, setUserSearchResults] = useState([]);
+  const [isSearchingUser, setIsSearchingUser] = useState(false);
+  const [selectedExistingUser, setSelectedExistingUser] = useState(null);
+  const [userSearchMode, setUserSearchMode] = useState(false); // true = tìm kiếm, false = tạo mới
 
   // Update URL when filters change
   useEffect(() => {
@@ -310,6 +329,153 @@ const UserList = () => {
     }
   };
 
+  // Hàm xử lý tạo người dùng mới với role Seller
+  const handleCreateUser = async (e) => {
+    e.preventDefault();
+    
+    try {
+      setLoading(true);
+      
+      if (selectedExistingUser) {
+        // Trường hợp đổi role của người dùng đã tồn tại
+        await toastService.promise(
+          axios.patch(`/user/${selectedExistingUser.id}/role`, { 
+            role: 'Seller',
+            reason: 'Assigned as Seller by Admin'
+          }, {
+            headers: {
+              'Content-Type': 'application/json'
+            }
+          }),
+          {
+            pending: 'Changing user role to Seller...',
+            success: 'User role changed to Seller successfully!',
+            error: 'Failed to change user role.'
+          }
+        );
+      } else {
+        // Tạo người dùng mới
+        // Tạo đối tượng gửi đi
+        const createUserDto = {
+          ...newUser,
+          role: 'Seller' // Gán cố định role là Seller
+        };
+        
+        // Gọi API tạo người dùng mới
+        await toastService.promise(
+          axios.post('/user', createUserDto),
+          {
+            pending: 'Creating new seller account...',
+            success: 'Seller account created successfully!',
+            error: 'Failed to create seller account.'
+          }
+        );
+      }
+      
+      // Đóng modal và reset form
+      setIsCreateModalOpen(false);
+      setNewUser({
+        username: '',
+        email: '',
+        password: '',
+        fullName: '',
+        phoneNumber: '',
+        address: ''
+      });
+      setSelectedExistingUser(null);
+      setUserSearchTerm('');
+      setUserSearchResults([]);
+      setUserSearchMode(false);
+      
+      // Tải lại danh sách user
+      fetchUsers();
+    } catch (error) {
+      console.error('Error handling user:', error);
+      if (error.response && error.response.data) {
+        // In chi tiết về lỗi từ server để debug
+        console.error('Server error details:', error.response.data);
+        // Hiển thị thông báo lỗi chi tiết hơn
+        if (error.response.data.message) {
+          toastService.error(`Operation failed: ${error.response.data.message}`);
+        } else if (typeof error.response.data === 'string') {
+          toastService.error(`Operation failed: ${error.response.data}`);
+        } else {
+          toastService.error('Failed to create or update user. Please check console for details.');
+        }
+      } else {
+        toastService.error(`Operation failed: ${error.message}`);
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+  // Hàm xử lý thay đổi giá trị form
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setNewUser(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  // Hàm tìm kiếm người dùng đã tồn tại
+  const handleSearchExistingUser = async () => {
+    if (!userSearchTerm) return;
+    
+    try {
+      setIsSearchingUser(true);
+      
+      // Gọi API tìm kiếm người dùng
+      const response = await axios.get(`/user/search?search=${encodeURIComponent(userSearchTerm)}`);
+      
+      if (response.data && Array.isArray(response.data)) {
+        setUserSearchResults(response.data);
+      } else {
+        setUserSearchResults([]);
+        toastService.warning('No users found or invalid response format');
+      }
+    } catch (error) {
+      console.error('Error searching users:', error);
+      toastService.error('Failed to search for users');
+      setUserSearchResults([]);
+    } finally {
+      setIsSearchingUser(false);
+    }
+  };
+  
+  // Hàm chọn người dùng từ kết quả tìm kiếm
+  const handleSelectExistingUser = (user) => {
+    setSelectedExistingUser(user);
+    setUserSearchResults([]);
+    setUserSearchTerm('');
+  };
+  
+  // Hàm chuyển đổi giữa chế độ tìm kiếm và tạo mới
+  const toggleUserSearchMode = () => {
+    setUserSearchMode(!userSearchMode);
+    // Reset các state liên quan khi chuyển chế độ
+    setUserSearchTerm('');
+    setUserSearchResults([]);
+    setSelectedExistingUser(null);
+    if (!userSearchMode) {
+      // Chuyển từ tạo mới sang tìm kiếm, reset form tạo mới
+      setNewUser({
+        username: '',
+        email: '',
+        password: '',
+        fullName: '',
+        phoneNumber: '',
+        address: ''
+      });
+    }
+  };
+  
+  // Hủy chọn người dùng đã tồn tại
+  const clearSelectedUser = () => {
+    setSelectedExistingUser(null);
+  };
+
   if (loading && users.length === 0) {
     return <div className="loading">Loading users...</div>;
   }
@@ -319,6 +485,13 @@ const UserList = () => {
       <div className="user-header">
         <h1>Users</h1>
         <div className="header-actions">
+          <button 
+            className="create-user-btn"
+            onClick={() => setIsCreateModalOpen(true)}
+          >
+            <UserPlusIcon className="w-5 h-5" />
+            Create Seller
+          </button>
           <form onSubmit={handleSearch} className="search-form-inline">
             <div className="search-input-container">
               <input
@@ -432,6 +605,189 @@ const UserList = () => {
           </select>
         </div>
       </div>
+
+      {/* Modal tạo người dùng mới */}
+      {isCreateModalOpen && (
+        <div className="modal">
+          <div className="modal-content">
+            <h2>{userSearchMode ? 'Find Existing User' : 'Create Seller Account'}</h2>
+            <div className="modal-form-content">
+              <div className="toggle-mode-container">
+                <button 
+                  type="button" 
+                  className={`toggle-mode-btn ${!userSearchMode ? 'active' : ''}`}
+                  onClick={() => !userSearchMode ? null : toggleUserSearchMode()}
+                >
+                  Create New
+                </button>
+                <button 
+                  type="button" 
+                  className={`toggle-mode-btn ${userSearchMode ? 'active' : ''}`}
+                  onClick={() => userSearchMode ? null : toggleUserSearchMode()}
+                >
+                  Find Existing
+                </button>
+              </div>
+              
+              {selectedExistingUser ? (
+                <div className="selected-user-container">
+                  <div className="selected-user-info">
+                    <h3>Selected User</h3>
+                    <p><strong>Username:</strong> {selectedExistingUser.username}</p>
+                    <p><strong>Email:</strong> {selectedExistingUser.email}</p>
+                    <p><strong>Full Name:</strong> {selectedExistingUser.fullName}</p>
+                    <p><strong>Current Role:</strong> <span className={`role-badge badge-${selectedExistingUser.role.toLowerCase()}`}>{selectedExistingUser.role}</span></p>
+                    <p className="role-change-note">This user's role will be changed to <span className="role-badge badge-seller">Seller</span></p>
+                  </div>
+                  <button type="button" className="clear-selection-btn" onClick={clearSelectedUser}>
+                    Clear Selection
+                  </button>
+                </div>
+              ) : userSearchMode ? (
+                <div className="search-user-container">
+                  <div className="search-user-input">
+                    <input
+                      type="text"
+                      placeholder="Search by username or email"
+                      value={userSearchTerm}
+                      onChange={(e) => setUserSearchTerm(e.target.value)}
+                    />
+                    <button 
+                      type="button" 
+                      className="search-user-btn"
+                      onClick={handleSearchExistingUser}
+                      disabled={isSearchingUser || !userSearchTerm}
+                    >
+                      {isSearchingUser ? 'Searching...' : 'Search'}
+                    </button>
+                  </div>
+                  
+                  {userSearchResults.length > 0 && (
+                    <div className="search-results">
+                      <h3>Search Results</h3>
+                      <div className="search-results-list">
+                        {userSearchResults.map(user => (
+                          <div 
+                            key={user.id} 
+                            className="search-result-item"
+                            onClick={() => handleSelectExistingUser(user)}
+                          >
+                            <div className="user-info">
+                              <div className="user-name">{user.username}</div>
+                              <div className="user-email">{user.email}</div>
+                            </div>
+                            <div className="user-role">
+                              <span className={`role-badge badge-${user.role.toLowerCase()}`}>
+                                {user.role}
+                              </span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  
+                  {userSearchResults.length === 0 && userSearchTerm && !isSearchingUser && (
+                    <div className="no-results">No users found with that search term</div>
+                  )}
+                </div>
+              ) : (
+                <form onSubmit={handleCreateUser}>
+                  <div className="form-group">
+                    <label htmlFor="username">Username <span className="required">*</span></label>
+                    <input
+                      type="text"
+                      id="username"
+                      name="username"
+                      value={newUser.username}
+                      onChange={handleInputChange}
+                      required
+                      placeholder="Enter username"
+                    />
+                  </div>
+                  
+                  <div className="form-group">
+                    <label htmlFor="email">Email <span className="required">*</span></label>
+                    <input
+                      type="email"
+                      id="email"
+                      name="email"
+                      value={newUser.email}
+                      onChange={handleInputChange}
+                      required
+                      placeholder="Enter email address"
+                    />
+                  </div>
+                  
+                  <div className="form-group">
+                    <label htmlFor="password">Password <span className="required">*</span></label>
+                    <input
+                      type="password"
+                      id="password"
+                      name="password"
+                      value={newUser.password}
+                      onChange={handleInputChange}
+                      required
+                      placeholder="Enter password"
+                    />
+                  </div>
+                  
+                  <div className="form-group">
+                    <label htmlFor="fullName">Full Name <span className="required">*</span></label>
+                    <input
+                      type="text"
+                      id="fullName"
+                      name="fullName"
+                      value={newUser.fullName}
+                      onChange={handleInputChange}
+                      required
+                      placeholder="Enter full name"
+                    />
+                  </div>
+                  
+                  <div className="form-group">
+                    <label htmlFor="phoneNumber">Phone Number</label>
+                    <input
+                      type="tel"
+                      id="phoneNumber"
+                      name="phoneNumber"
+                      value={newUser.phoneNumber}
+                      onChange={handleInputChange}
+                      placeholder="Enter phone number"
+                    />
+                  </div>
+                  
+                  <div className="form-group">
+                    <label htmlFor="address">Address</label>
+                    <input
+                      type="text"
+                      id="address"
+                      name="address"
+                      value={newUser.address}
+                      onChange={handleInputChange}
+                      placeholder="Enter address"
+                    />
+                  </div>
+                </form>
+              )}
+            </div>
+            
+            <div className="modal-actions">
+              <button type="button" onClick={() => setIsCreateModalOpen(false)}>Cancel</button>
+              <button 
+                type="button" 
+                onClick={handleCreateUser}
+                disabled={
+                  (!userSearchMode && (!newUser.username || !newUser.email || !newUser.password || !newUser.fullName)) || 
+                  (userSearchMode && !selectedExistingUser)
+                }
+              >
+                {selectedExistingUser ? 'Change to Seller' : 'Create Account'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

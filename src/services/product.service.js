@@ -89,6 +89,7 @@ class ProductService {
             const response = await axios.post('/Product', productData);
             return response.data;
         } catch (error) {
+            console.error('Error creating product:', error);
             throw error;
         }
     }

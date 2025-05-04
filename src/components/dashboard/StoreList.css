@@ -388,26 +388,39 @@
   justify-content: center;
   align-items: center;
   z-index: 1000;
+  scrollbar-gutter: stable;
+  overflow-y: auto;
+  padding: 20px;
+  animation: modalFadeIn 0.2s ease;
 }
 
 .modal-content {
   width: 100%;
   max-width: 500px;
+  max-height: 80vh;
   background-color: var(--card-background);
-  padding: 24px;
   border-radius: var(--border-radius-lg);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  margin: auto;
+  animation: modalSlideIn 0.3s ease;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
 .modal-content h2 {
-  margin-top: 0;
-  margin-bottom: 20px;
+  position: sticky;
+  top: 0;
+  background-color: var(--card-background);
+  margin: 0;
+  padding: 24px 24px 10px;
+  border-bottom: 1px solid var(--border-color);
+  z-index: 5;
   font-size: var(--font-size-md);
   font-weight: var(--font-weight-semibold);
-}
-
-.form-group {
-  margin-bottom: 16px;
+  border-top-left-radius: var(--border-radius-lg);
+  border-top-right-radius: var(--border-radius-lg);
 }
 
 .form-group label {
@@ -415,10 +428,13 @@
   margin-bottom: 4px;
   font-size: var(--font-size-xs);
   font-weight: var(--font-weight-medium);
+  color: var(--text-color);
+  opacity: 0.9;
 }
 
 .form-group input,
-.form-group textarea {
+.form-group textarea,
+.form-group select {
   width: 100%;
   padding: 10px;
   border: 1.5px solid var(--border-color);
@@ -426,25 +442,75 @@
   font-size: var(--font-size-xs);
   background-color: var(--background-color);
   color: var(--text-color);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.form-group input:focus,
+.form-group textarea:focus,
+.form-group select:focus {
+  outline: none;
+  border-color: var(--primary-color, #0070f3);
+  box-shadow: 0 0 0 2px rgba(0, 112, 243, 0.1);
 }
 
 .form-group textarea {
   resize: vertical;
-  min-height: 100px;
+  min-height: 80px;
+  max-height: 200px;
+}
+
+.form-group textarea::-webkit-scrollbar {
+  width: 6px;
+}
+
+.form-group textarea::-webkit-scrollbar-track {
+  background: transparent;
+  margin: 3px;
+}
+
+.form-group textarea::-webkit-scrollbar-thumb {
+  background-color: rgba(128, 128, 128, 0.5);
+  border-radius: 8px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+
+.form-group textarea::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(128, 128, 128, 0.7);
+}
+
+.modal-form-content {
+  position: relative;
+  z-index: 1;
+  padding: 24px;
+  padding-bottom: 20px;
+  padding-top: 10px;
+  overflow-y: auto;
+  max-height: calc(80vh - 140px);
 }
 
 .modal-actions {
   display: flex;
   justify-content: flex-end;
   gap: 12px;
-  margin-top: 20px;
+  padding: 16px 24px;
+  background-color: var(--card-background);
+  border-top: 1px solid var(--border-color);
+  position: sticky;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 5;
+  border-bottom-left-radius: var(--border-radius-lg);
+  border-bottom-right-radius: var(--border-radius-lg);
+  box-shadow: 0 -4px 6px -2px rgba(0, 0, 0, 0.05);
 }
 
 .modal-actions button {
-  padding: 8px 16px;
-  border: none;
+  padding: 10px 16px;
   border-radius: var(--border-radius-md);
   font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
   cursor: pointer;
   transition: all var(--transition-fast);
 }
@@ -455,11 +521,260 @@
   border: 1.5px solid var(--border-color);
 }
 
+.modal-actions button:first-child:hover {
+  background-color: var(--hover-background);
+  border-color: var(--text-color);
+}
+
 .modal-actions button:last-child {
-  background-color: var(--text-color);
-  color: var(--background-color);
+  background-color: var(--primary-color, #0070f3);
+  color: white;
+  border: none;
+}
+
+.modal-actions button:last-child:hover {
+  background-color: var(--primary-color-dark, #0058c5);
+  transform: translateY(-1px);
 }
 
 .store-card:hover {
   transform: translateY(-2px);
+}
+
+.create-store-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  padding: var(--button-padding, 8px 16px);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+  color: var(--background-color);
+  background-color: var(--text-color);
+  border: 1px solid transparent;
+  border-radius: var(--border-radius-md);
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  transition: all var(--transition-fast);
+  cursor: pointer;
+}
+
+.create-store-btn:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+.create-store-btn:active {
+  transform: translateY(0);
+}
+
+.loading-indicator {
+  font-size: var(--font-size-xs);
+  margin-top: 4px;
+  color: var(--text-color);
+  opacity: 0.7;
+}
+
+.required {
+  color: #dc3545;
+  margin-left: 2px;
+}
+
+/* Cải thiện style cho select */
+.form-group select {
+  width: 100%;
+  padding: 10px;
+  border: 1.5px solid var(--border-color);
+  border-radius: var(--border-radius-sm);
+  font-size: var(--font-size-xs);
+  background-color: var(--background-color);
+  color: var(--text-color);
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  background-size: 16px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--hover-background) var(--background-color);
+}
+
+.form-group select:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Thêm animations */
+@keyframes modalFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes modalSlideIn {
+  from { transform: translateY(30px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+  .modal-content {
+    max-width: 100%;
+    max-height: 90vh;
+    padding: 16px;
+    margin: 0 10px;
+    border-radius: var(--border-radius-md);
+  }
+  
+  .form-group label {
+    font-size: 12px;
+  }
+  
+  .modal-actions {
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  .modal-actions button {
+    width: 100%;
+  }
+}
+
+/* Cải thiện form layout cho modal */
+.form-layout {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(128, 128, 128, 0.5) transparent;
+}
+
+.form-layout.two-columns {
+  grid-template-columns: 1fr 1fr;
+}
+
+/* Form layout responsive */
+@media (max-width: 600px) {
+  .form-layout.two-columns {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Tùy chỉnh scrollbar cho toàn bộ trang */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+  margin: 3px;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: rgba(128, 128, 128, 0.5);
+  border-radius: 8px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(128, 128, 128, 0.7);
+}
+
+/* Tùy chỉnh scrollbar cho modal-content */
+.modal-content::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.modal-content::-webkit-scrollbar-track {
+  background: transparent;
+  margin: 3px;
+}
+
+.modal-content::-webkit-scrollbar-thumb {
+  background-color: rgba(128, 128, 128, 0.5);
+  border-radius: 8px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+
+.modal-content::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(128, 128, 128, 0.7);
+}
+
+/* Tùy chỉnh scrollbar cho form area */
+.form-layout::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.form-layout::-webkit-scrollbar-track {
+  background: transparent;
+  margin: 3px;
+}
+
+.form-layout::-webkit-scrollbar-thumb {
+  background-color: rgba(128, 128, 128, 0.5);
+  border-radius: 8px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+
+.form-layout::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(128, 128, 128, 0.7);
+}
+
+/* Đảm bảo scrollbar luôn ổn định trên các thiết bị */
+@supports (scrollbar-width: thin) {
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(128, 128, 128, 0.5) transparent;
+  }
+}
+
+/* Smoothing scrolling cho toàn trang */
+html {
+  scroll-behavior: smooth;
+}
+
+.warning-message {
+  color: #e67e22;
+  font-size: var(--font-size-xs);
+  margin-top: 8px;
+  padding: 8px;
+  background: rgba(230, 126, 34, 0.1);
+  border-left: 3px solid #e67e22;
+  border-radius: 4px;
+}
+
+/* Styling cho option disabled */
+select option:disabled {
+  color: #999;
+  font-style: italic;
+}
+
+/* Thêm class cho nội dung form */
+.modal-form-content {
+  position: relative;
+  z-index: 1;
+  padding-top: 10px;
+}
+
+/* Thêm hiệu ứng mờ dần cho header và footer */
+.modal-content h2::after {
+  content: '';
+  position: absolute;
+  bottom: -5px;
+  left: 0;
+  right: 0;
+  height: 5px;
+  background: linear-gradient(to bottom, rgba(0,0,0,0.1), transparent);
+}
+
+.modal-actions::before {
+  content: '';
+  position: absolute;
+  top: -5px;
+  left: 0;
+  right: 0;
+  height: 5px;
+  background: linear-gradient(to top, rgba(0,0,0,0.1), transparent);
 } 

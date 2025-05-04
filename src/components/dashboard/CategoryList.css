@@ -264,6 +264,7 @@
   height: var(--icon-size-sm);
 }
 
+/* Modal */
 .modal {
   position: fixed;
   top: 0;
@@ -275,27 +276,64 @@
   justify-content: center;
   align-items: center;
   z-index: var(--z-index-modal);
+  scrollbar-gutter: stable;
+  overflow-y: auto;
+  padding: 20px;
+  animation: modalFadeIn 0.2s ease;
 }
 
 .modal-content {
   background: var(--card-background);
-  padding: var(--spacing-md);
+  padding: 0;
   border-radius: var(--border-radius-lg);
   width: 100%;
   max-width: 500px;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: modalSlideIn 0.3s ease;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 .modal-content h2 {
   color: var(--text-color);
-  margin-bottom: var(--spacing-md);
+  margin: 0;
+  padding: 24px 24px 10px;
   font-size: var(--font-size-md);
+  position: sticky;
+  top: 0;
+  background-color: var(--card-background);
+  z-index: 5;
+  border-bottom: 1px solid var(--border-color);
+  border-top-left-radius: var(--border-radius-lg);
+  border-top-right-radius: var(--border-radius-lg);
+}
+
+.modal-content h2::after {
+  content: '';
+  position: absolute;
+  bottom: -5px;
+  left: 0;
+  right: 0;
+  height: 5px;
+  background: linear-gradient(to bottom, rgba(0,0,0,0.1), transparent);
+}
+
+.modal-form-content {
+  position: relative;
+  padding: 20px 24px;
+  overflow-y: auto;
+  max-height: calc(80vh - 140px);
+  z-index: 1;
 }
 
 .modal-content input,
-.modal-content textarea {
+.modal-content textarea,
+.modal-content select {
   width: 100%;
   padding: var(--input-padding);
-  /* margin-bottom: var(--spacing-md); */
+  margin-bottom: var(--spacing-md);
   border: 1px solid var(--border-color);
   border-radius: var(--border-radius-md);
   background: var(--background-color);
@@ -313,6 +351,27 @@
   justify-content: flex-end;
   gap: var(--spacing-md);
   margin-top: var(--spacing-md);
+  padding: 16px 24px;
+  background-color: var(--card-background);
+  border-top: 1px solid var(--border-color);
+  position: sticky;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 5;
+  border-bottom-left-radius: var(--border-radius-lg);
+  border-bottom-right-radius: var(--border-radius-lg);
+  box-shadow: 0 -4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+
+.modal-actions::before {
+  content: '';
+  position: absolute;
+  top: -5px;
+  left: 0;
+  right: 0;
+  height: 5px;
+  background: linear-gradient(to top, rgba(0,0,0,0.1), transparent);
 }
 
 .modal-actions button {
@@ -332,6 +391,39 @@
   background: var(--text-color);
   color: var(--background-color);
   border: none;
+}
+
+/* Animations */
+@keyframes modalFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes modalSlideIn {
+  from { transform: translateY(30px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+/* Custom scrollbar */
+.modal-form-content::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.modal-form-content::-webkit-scrollbar-track {
+  background: transparent;
+  margin: 3px;
+}
+
+.modal-form-content::-webkit-scrollbar-thumb {
+  background-color: rgba(128, 128, 128, 0.5);
+  border-radius: 8px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+
+.modal-form-content::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(128, 128, 128, 0.7);
 }
 
 .comma-list {
