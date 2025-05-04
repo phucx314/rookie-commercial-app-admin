@@ -3,6 +3,7 @@ import { useSearchParams, useLocation, useNavigate } from 'react-router-dom';
 import { PlusIcon, PencilIcon, TrashIcon, ChevronUpIcon, ChevronDownIcon, MagnifyingGlassIcon, PrinterIcon } from '@heroicons/react/24/outline';
 import orderService from '../../services/order.service';
 import productService from '../../services/product.service';
+import storeService from '../../services/store.service';
 import Pagination from '../common/Pagination';
 import { toastService } from '../../services';
 import './OrderList.css';
@@ -252,14 +253,29 @@ const OrderList = () => {
         return;
       }
 
-      // Truy vấn thêm thông tin sản phẩm nếu cần
+      // Truy vấn thêm thông tin sản phẩm và cửa hàng cho mỗi item
       const orderItems = await Promise.all(orderDetails.orderItems.map(async (item) => {
         let productName = 'Unknown Product';
+        let storeInfo = null;
         
         try {
           // Nếu đã có thông tin sản phẩm
           if (item.product && item.product.name) {
             productName = item.product.name;
+            
+            // Cố gắng lấy thông tin cửa hàng từ sản phẩm nếu có
+            if (item.product.storeId) {
+              try {
+                const storeData = await storeService.getStoreById(item.product.storeId);
+                storeInfo = {
+                  id: storeData.id,
+                  name: storeData.name,
+                  logoUrl: storeData.logoUrl
+                };
+              } catch (storeError) {
+                console.warn(`Could not fetch store info for product ${item.productId}:`, storeError);
+              }
+            }
           } 
           // Nếu không có thông tin sản phẩm, thử gọi API lấy thông tin sản phẩm
           else if (item.productId) {
@@ -268,6 +284,20 @@ const OrderList = () => {
               const productData = await productService.getProductById(item.productId);
               if (productData) {
                 productName = productData.name;
+                
+                // Lấy thông tin cửa hàng từ sản phẩm
+                if (productData.storeId) {
+                  try {
+                    const storeData = await storeService.getStoreById(productData.storeId);
+                    storeInfo = {
+                      id: storeData.id,
+                      name: storeData.name,
+                      logoUrl: storeData.logoUrl
+                    };
+                  } catch (storeError) {
+                    console.warn(`Could not fetch store info for product ${item.productId}:`, storeError);
+                  }
+                }
               }
             } catch (productError) {
               console.warn(`Could not fetch product info for ${item.productId}:`, productError);
@@ -281,7 +311,8 @@ const OrderList = () => {
         return {
           name: productName,
           price: item.price,
-          quantity: item.quantity
+          quantity: item.quantity,
+          storeInfo: storeInfo
         };
       }));
       

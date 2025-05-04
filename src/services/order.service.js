@@ -123,8 +123,8 @@ class OrderService {
             
             // Tạo nội dung hóa đơn
             const currentDate = new Date().toLocaleString();
-            const orderDate = new Date().toLocaleDateString();
-            const orderTime = new Date().toLocaleTimeString();
+            const orderDate = new Date(orderData.createdAt || new Date()).toLocaleDateString();
+            const orderTime = new Date(orderData.createdAt || new Date()).toLocaleTimeString();
             
             // Tạo một cửa sổ mới để in hóa đơn
             const printWindow = window.open('', '_blank');
@@ -134,11 +134,47 @@ class OrderService {
                 return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
             };
             
+            // Nhóm sản phẩm theo cửa hàng
+            const storeGroups = {};
+            let defaultStore = {
+                name: 'Ecom Store',
+                logoUrl: '',
+                items: []
+            };
+            
+            // Nhóm sản phẩm theo cửa hàng
+            if (orderData.orderItems && orderData.orderItems.length > 0) {
+                orderData.orderItems.forEach(item => {
+                    if (item.storeInfo && item.storeInfo.id) {
+                        // Nếu đã có thông tin cửa hàng, thêm vào nhóm tương ứng
+                        const storeId = item.storeInfo.id;
+                        if (!storeGroups[storeId]) {
+                            storeGroups[storeId] = {
+                                id: storeId,
+                                name: item.storeInfo.name,
+                                logoUrl: item.storeInfo.logoUrl || '',
+                                items: []
+                            };
+                        }
+                        storeGroups[storeId].items.push(item);
+                    } else {
+                        // Nếu không có thông tin cửa hàng, thêm vào nhóm mặc định
+                        defaultStore.items.push(item);
+                    }
+                });
+            }
+            
+            // Tạo mảng các cửa hàng để hiển thị (bao gồm cả cửa hàng mặc định nếu có sản phẩm)
+            const stores = Object.values(storeGroups);
+            if (defaultStore.items.length > 0) {
+                stores.push(defaultStore);
+            }
+            
             // Tạo HTML cho hóa đơn
             let billContent = `
                 <html>
                 <head>
-                    <title>Invoice #${Math.floor(Math.random() * 10000)}</title>
+                    <title>Invoice #${orderData.id?.substring(0, 8) || Math.floor(Math.random() * 10000)}</title>
                     <style>
                         body {
                             font-family: Arial, sans-serif;
@@ -149,6 +185,11 @@ class OrderService {
                         .invoice-header {
                             text-align: center;
                             margin-bottom: 30px;
+                        }
+                        .store-logo {
+                            max-width: 150px;
+                            max-height: 150px;
+                            margin-bottom: 10px;
                         }
                         .invoice-header h1 {
                             margin-bottom: 5px;
@@ -179,14 +220,58 @@ class OrderService {
                         .invoice-table th {
                             background-color: #f2f2f2;
                         }
+                        .store-section {
+                            margin-top: 40px;
+                            margin-bottom: 30px;
+                            padding-top: 20px;
+                            border-top: 1px dashed #ccc;
+                        }
+                        .store-header {
+                            display: flex;
+                            align-items: center;
+                            margin-bottom: 20px;
+                        }
+                        .store-logo-small {
+                            max-width: 80px;
+                            max-height: 80px;
+                            margin-right: 15px;
+                        }
+                        .store-name {
+                            font-size: 18px;
+                            font-weight: bold;
+                            color: #333;
+                        }
                         .total-row {
                             font-weight: bold;
+                        }
+                        .subtotal-row {
+                            font-weight: bold;
+                            background-color: #f9f9f9;
+                        }
+                        .grand-total-section {
+                            margin-top: 30px;
+                            border-top: 2px solid #333;
+                            padding-top: 20px;
+                        }
+                        .grand-total-table {
+                            width: 40%;
+                            margin-left: auto;
+                            border-collapse: collapse;
+                        }
+                        .grand-total-table td {
+                            padding: 8px;
+                        }
+                        .grand-total-value {
+                            font-weight: bold;
+                            font-size: 16px;
                         }
                         .invoice-footer {
                             margin-top: 50px;
                             text-align: center;
                             font-size: 12px;
                             color: #666;
+                            padding-top: 20px;
+                            border-top: 1px solid #eee;
                         }
                         .text-right {
                             text-align: right;
@@ -198,6 +283,9 @@ class OrderService {
                             body {
                                 print-color-adjust: exact;
                                 -webkit-print-color-adjust: exact;
+                            }
+                            .store-section {
+                                page-break-inside: avoid;
                             }
                         }
                         .print-button {
@@ -222,7 +310,7 @@ class OrderService {
                     
                     <div class="invoice-header">
                         <h1>INVOICE</h1>
-                        <p>Ecom Store System</p>
+                        <p>${stores.length > 1 ? 'Multiple Stores' : (stores[0]?.name || 'Ecom Store')}</p>
                         <p>Date: ${currentDate}</p>
                     </div>
                     
@@ -236,60 +324,96 @@ class OrderService {
                         
                         <div class="order-info">
                             <h3>Order Information</h3>
+                            <p><strong>Order ID:</strong> ${orderData.id}</p>
                             <p><strong>Order Date:</strong> ${orderDate}</p>
                             <p><strong>Order Time:</strong> ${orderTime}</p>
-                            <p><strong>Shipping Address:</strong> ${orderData.shippingAddress}</p>
+                            <p><strong>Shipping Address:</strong> ${orderData.shippingAddress || 'N/A'}</p>
                             <p><strong>Payment Method:</strong> ${orderData.paymentMethod}</p>
                         </div>
                     </div>
-                    
-                    <table class="invoice-table">
-                        <thead>
-                            <tr>
-                                <th>#</th>
-                                <th>Product</th>
-                                <th>Quantity</th>
-                                <th>Unit Price</th>
-                                <th>Total</th>
-                            </tr>
-                        </thead>
-                        <tbody>
             `;
             
-            // Thêm các mục sản phẩm
-            if (orderData.orderItems && orderData.orderItems.length > 0) {
-                orderData.orderItems.forEach((item, index) => {
-                    const subtotal = item.price * item.quantity;
-                    // Đảm bảo luôn có tên sản phẩm để hiển thị
-                    const productName = item.name || (item.product ? item.product.name : `Product #${index + 1}`);
+            // Tổng giá trị đơn hàng
+            let grandTotal = 0;
+            
+            // Thêm phần cho từng cửa hàng
+            stores.forEach((store, storeIndex) => {
+                let storeTotal = 0;
+                
+                billContent += `
+                    <div class="store-section">
+                        <div class="store-header">
+                            ${store.logoUrl ? `<img src="${store.logoUrl}" alt="${store.name} Logo" class="store-logo-small" />` : ''}
+                            <div class="store-name">${store.name}</div>
+                        </div>
+                        
+                        <table class="invoice-table">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Product</th>
+                                    <th>Quantity</th>
+                                    <th>Unit Price</th>
+                                    <th>Total</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                `;
+                
+                // Thêm các mục sản phẩm cho cửa hàng này
+                if (store.items && store.items.length > 0) {
+                    store.items.forEach((item, index) => {
+                        const subtotal = item.price * item.quantity;
+                        storeTotal += subtotal;
+                        grandTotal += subtotal;
+                        
+                        // Đảm bảo luôn có tên sản phẩm để hiển thị
+                        const productName = item.name || (item.product ? item.product.name : `Product #${index + 1}`);
+                        
+                        billContent += `
+                            <tr>
+                                <td>${index + 1}</td>
+                                <td>${productName}</td>
+                                <td>${item.quantity}</td>
+                                <td class="text-right">${formatCurrency(item.price)}</td>
+                                <td class="text-right">${formatCurrency(subtotal)}</td>
+                            </tr>
+                        `;
+                    });
                     
+                    // Thêm tổng tiền cho cửa hàng này
                     billContent += `
-                        <tr>
-                            <td>${index + 1}</td>
-                            <td>${productName}</td>
-                            <td>${item.quantity}</td>
-                            <td class="text-right">${formatCurrency(item.price)}</td>
-                            <td class="text-right">${formatCurrency(subtotal)}</td>
+                        <tr class="subtotal-row">
+                            <td colspan="4" class="text-right">Subtotal (${store.name}):</td>
+                            <td class="text-right">${formatCurrency(storeTotal)}</td>
                         </tr>
                     `;
-                });
-            } else {
-                // Nếu không có mục nào, hiển thị thông báo
-                billContent += `
-                    <tr>
-                        <td colspan="5" style="text-align: center">No items in this order</td>
-                    </tr>
-                `;
-            }
-            
-            // Thêm tổng tiền
-            billContent += `
-                        <tr class="total-row">
-                            <td colspan="4" class="text-right">Total Amount:</td>
-                            <td class="text-right">${formatCurrency(orderData.totalAmount)}</td>
+                } else {
+                    // Nếu không có mục nào, hiển thị thông báo
+                    billContent += `
+                        <tr>
+                            <td colspan="5" style="text-align: center">No items from this store</td>
                         </tr>
-                    </tbody>
-                </table>
+                    `;
+                }
+                
+                billContent += `
+                            </tbody>
+                        </table>
+                    </div>
+                `;
+            });
+            
+            // Thêm tổng tiền cho toàn bộ đơn hàng
+            billContent += `
+                <div class="grand-total-section">
+                    <table class="grand-total-table">
+                        <tr>
+                            <td class="text-right">Grand Total:</td>
+                            <td class="text-right grand-total-value">${formatCurrency(orderData.totalAmount || grandTotal)}</td>
+                        </tr>
+                    </table>
+                </div>
                 
                 <div class="invoice-footer">
                     <p>Thank you for your purchase!</p>
