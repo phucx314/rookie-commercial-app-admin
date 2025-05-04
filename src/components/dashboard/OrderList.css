@@ -265,7 +265,57 @@
   color: var(--text-color);
 }
 
+.order-actions .order-print-btn {
+  background-color: #4CAF50;
+  color: white;
+}
+
+.order-actions .order-print-btn:hover {
+  opacity: 0.9;
+}
+
 .order-actions button svg {
+  width: var(--icon-size-sm);
+  height: var(--icon-size-sm);
+}
+
+.actions-cell {
+  display: flex;
+  gap: var(--spacing-xs);
+  justify-content: flex-start;
+}
+
+.order-edit-btn, .order-print-btn {
+  padding: var(--spacing-xs);
+  border: none;
+  border-radius: var(--border-radius-sm);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition-fast);
+}
+
+.order-edit-btn {
+  background-color: var(--hover-background);
+  color: var(--text-color);
+}
+
+.order-print-btn {
+  background-color: #4CAF50;
+  color: white;
+}
+
+.order-print-btn:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+.order-print-btn:active {
+  transform: translateY(0);
+}
+
+.order-action-icon {
   width: var(--icon-size-sm);
   height: var(--icon-size-sm);
 }

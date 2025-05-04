@@ -483,24 +483,22 @@
   padding: var(--button-padding);
   border: 1px solid var(--border-color);
   border-radius: var(--border-radius-md);
-  background-color: var(--background-color);
+  background: var(--background-color);
   color: var(--text-color);
-  font-size: var(--font-size-xs);
   cursor: pointer;
   transition: all var(--transition-fast);
 }
 
 .order-cancel-button:hover {
-  background-color: var(--hover-background);
+  background: var(--hover-background);
 }
 
 .order-create-button {
   padding: var(--button-padding);
-  background-color: var(--text-color);
-  color: var(--background-color);
   border: none;
   border-radius: var(--border-radius-md);
-  font-size: var(--font-size-xs);
+  background: var(--text-color);
+  color: var(--background-color);
   font-weight: var(--font-weight-medium);
   cursor: pointer;
   transition: all var(--transition-fast);
@@ -515,10 +513,45 @@
   cursor: not-allowed;
 }
 
+/* CSS cho nút in bill */
+.print-bill-button {
+  padding: var(--button-padding);
+  border: none;
+  border-radius: var(--border-radius-md);
+  background: #4CAF50; /* Màu xanh lá cho nút in */
+  color: white;
+  font-weight: var(--font-weight-medium);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.print-bill-button svg {
+  width: 16px;
+  height: 16px;
+}
+
+.print-bill-button:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+.print-bill-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.print-bill-button:active {
+  transform: translateY(0);
+}
+
 .create-order-error-message {
   color: #ef4444;
   font-size: var(--font-size-xs);
-  margin-top: 5px;
+  margin-top: 4px;
 }
 
 .loading-spinner {

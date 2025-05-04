@@ -449,7 +449,7 @@
 .form-group textarea:focus,
 .form-group select:focus {
   outline: none;
-  border-color: var(--primary-color, #0070f3);
+  border-color: var(--primary-color, var(--text-color));
   box-shadow: 0 0 0 2px rgba(0, 112, 243, 0.1);
 }
 
@@ -527,13 +527,13 @@
 }
 
 .modal-actions button:last-child {
-  background-color: var(--primary-color, #0070f3);
+  background-color: var(--primary-color, var(--text-color));
   color: white;
   border: none;
 }
 
 .modal-actions button:last-child:hover {
-  background-color: var(--primary-color-dark, #0058c5);
+  background-color: var(--primary-color-dark, var(--text-color));
   transform: translateY(-1px);
 }
 

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeftIcon } from '@heroicons/react/24/outline';
+import { ArrowLeftIcon, PrinterIcon } from '@heroicons/react/24/outline';
 import './CreateInStoreOrder.css';
 import orderService from '../../services/order.service';
 import productService from '../../services/product.service';
@@ -42,6 +42,9 @@ const CreateInStoreOrder = () => {
 
   // Thêm state lưu quantity nhập cho từng product
   const [productQuantities, setProductQuantities] = useState({});
+  
+  // Thêm state cho đơn hàng đã tạo
+  const [createdOrder, setCreatedOrder] = useState(null);
 
   useEffect(() => {
     loadInitialProducts();
@@ -247,14 +250,42 @@ const CreateInStoreOrder = () => {
         };
       } else {
         // Existing customer - only need to send customerId
-        // Backend has been updated to not require the Customer field anymore
         orderData.customerId = selectedCustomer.id;
       }
 
       console.log('Sending order data:', orderData);
-      await orderService.createInStoreOrder(orderData);
+      const response = await orderService.createInStoreOrder(orderData);
+      
+      // Lưu thông tin đơn hàng đã tạo để có thể in hóa đơn
+      const createdOrderData = {
+        ...orderData,
+        customerName: isNewCustomer ? newCustomerForm.fullName : selectedCustomer.fullName,
+        customerEmail: isNewCustomer ? newCustomerForm.email : selectedCustomer.email,
+        customerPhone: isNewCustomer ? newCustomerForm.phoneNumber : selectedCustomer.phoneNumber,
+        orderItems: selectedProducts.map(p => ({
+          ...p,
+          name: p.name,
+          price: p.price,
+          quantity: p.quantity
+        })),
+        status: formValues.status,
+        paymentStatus: formValues.paymentStatus,
+        paymentMethod: formValues.paymentMethod
+      };
+      
+      setCreatedOrder(createdOrderData);
+      
       toastService.success('Order created successfully');
-      navigate('/orders');
+      
+      // Hiển thị nút in bill nếu đơn hàng đã thanh toán và đã giao
+      if (formValues.status === 'Delivered' && formValues.paymentStatus === 'Paid') {
+        // Không tự động chuyển về trang orders để người dùng có thể in hóa đơn
+        // navigate('/orders');
+      } else {
+        setTimeout(() => {
+          navigate('/orders');
+        }, 3000); // Chờ 3 giây để người dùng xem thông báo thành công
+      }
     } catch (error) {
       console.error('Error creating order:', error);
       
@@ -286,6 +317,23 @@ const CreateInStoreOrder = () => {
       ...newCustomerForm,
       [name]: value
     });
+  };
+
+  // Thêm hàm in hóa đơn
+  const handlePrintBill = () => {
+    if (!createdOrder) {
+      toastService.error('No order data available for printing');
+      return;
+    }
+    
+    // Kiểm tra đơn hàng đã thanh toán và đã giao chưa
+    if (createdOrder.status !== 'Delivered' || createdOrder.paymentStatus !== 'Paid') {
+      toastService.warning('Only paid and delivered orders can be printed');
+      return;
+    }
+    
+    // Gọi service để in hóa đơn
+    orderService.printBill(createdOrder);
   };
 
   return (
@@ -836,11 +884,22 @@ const CreateInStoreOrder = () => {
                     >
                       Back
                   </button>
-                  <button 
+                  {createdOrder && formValues.status === 'Delivered' && formValues.paymentStatus === 'Paid' && (
+                    <button 
+                      className="print-bill-button"
+                      onClick={handlePrintBill}
+                      type="button"
+                    >
+                      <PrinterIcon className="print-icon" />
+                      Print Bill
+                    </button>
+                  )}
+                  {!createdOrder && (
+                    <button 
                       className="order-create-button"
                     type="submit"
                       disabled={loading}
-                  >
+                    >
                       {loading ? (
                         <>
                           <span className="loading-spinner"></span>
@@ -849,7 +908,17 @@ const CreateInStoreOrder = () => {
                       ) : (
                         'Create Order'
                       )}
-                  </button>
+                    </button>
+                  )}
+                  {createdOrder && (
+                    <button
+                      className="order-create-button"
+                      onClick={() => navigate('/orders')}
+                      type="button"
+                    >
+                      Go to Orders
+                    </button>
+                  )}
                 </div>
               </form>
               </div>

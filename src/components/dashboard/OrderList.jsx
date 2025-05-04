@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams, useLocation, useNavigate } from 'react-router-dom';
-import { PlusIcon, PencilIcon, TrashIcon, ChevronUpIcon, ChevronDownIcon, MagnifyingGlassIcon } from '@heroicons/react/24/outline';
+import { PlusIcon, PencilIcon, TrashIcon, ChevronUpIcon, ChevronDownIcon, MagnifyingGlassIcon, PrinterIcon } from '@heroicons/react/24/outline';
 import orderService from '../../services/order.service';
 import productService from '../../services/product.service';
 import Pagination from '../common/Pagination';
@@ -231,6 +231,80 @@ const OrderList = () => {
     }
   };
 
+  // Thêm hàm in hóa đơn
+  const handlePrintBill = async (order) => {
+    // Kiểm tra đơn hàng đã thanh toán và đã giao chưa
+    if (order.status !== 3 || order.paymentStatus !== 1) {
+      toastService.warning('Only paid and delivered orders can be printed');
+      return;
+    }
+    
+    try {
+      // Cần lấy thêm chi tiết đơn hàng để in
+      const orderDetails = await orderService.getOrderById(order.id);
+      
+      // Log để debug
+      console.log('Order details for printing:', orderDetails);
+      
+      // Hiện thị thông báo nếu không có thông tin sản phẩm
+      if (!orderDetails.orderItems || orderDetails.orderItems.length === 0) {
+        toastService.warning('Order has no items to print');
+        return;
+      }
+
+      // Truy vấn thêm thông tin sản phẩm nếu cần
+      const orderItems = await Promise.all(orderDetails.orderItems.map(async (item) => {
+        let productName = 'Unknown Product';
+        
+        try {
+          // Nếu đã có thông tin sản phẩm
+          if (item.product && item.product.name) {
+            productName = item.product.name;
+          } 
+          // Nếu không có thông tin sản phẩm, thử gọi API lấy thông tin sản phẩm
+          else if (item.productId) {
+            // Thử gọi API lấy thông tin sản phẩm sử dụng productService
+            try {
+              const productData = await productService.getProductById(item.productId);
+              if (productData) {
+                productName = productData.name;
+              }
+            } catch (productError) {
+              console.warn(`Could not fetch product info for ${item.productId}:`, productError);
+              productName = `Product (ID: ${item.productId})`;
+            }
+          }
+        } catch (error) {
+          console.warn(`Error processing order item:`, error);
+        }
+        
+        return {
+          name: productName,
+          price: item.price,
+          quantity: item.quantity
+        };
+      }));
+      
+      // Chuẩn bị dữ liệu cho hóa đơn
+      const orderData = {
+        ...orderDetails,
+        status: 'Delivered',
+        paymentStatus: 'Paid',
+        paymentMethod: getPaymentMethodText(orderDetails.paymentMethod),
+        customerName: orderDetails.customer?.fullName || 'Guest Customer',
+        customerEmail: orderDetails.customer?.email || '',
+        customerPhone: orderDetails.customer?.phoneNumber || '',
+        orderItems: orderItems
+      };
+      
+      // Gọi service để in hóa đơn
+      orderService.printBill(orderData);
+    } catch (error) {
+      console.error('Error printing bill:', error);
+      toastService.error('Error generating bill: ' + (error.response?.data?.message || error.message));
+    }
+  };
+
   if (loading) return <div className="loading">Loading orders...</div>;
 
   return (
@@ -337,6 +411,15 @@ const OrderList = () => {
                     >
                       <PencilIcon />
                     </button>
+                    {order.status === 3 && order.paymentStatus === 1 && (
+                      <button 
+                        className="print-btn"
+                        onClick={() => handlePrintBill(order)}
+                        title="Print Bill"
+                      >
+                        <PrinterIcon />
+                      </button>
+                    )}
                   </div>
                 </td>
               </tr>

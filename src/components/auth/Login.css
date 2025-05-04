@@ -81,7 +81,7 @@ html, body {
 button[type="submit"] {
   width: 100%;
   padding: 12px;
-  margin-top: 16px;
+  /* margin-top: 16px; */
   background: var(--text-color);
   color: var(--background-color);
   border: none;
@@ -107,4 +107,8 @@ button[type="submit"]:disabled {
   border-radius: 6px;
   margin-bottom: 20px;
   text-align: center;
+}
+
+.login-box button[type="submit"] {
+  margin-top: 16px;
 } 
