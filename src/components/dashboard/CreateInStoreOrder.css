@@ -593,4 +593,198 @@
 .create-order-product-list::-webkit-scrollbar-thumb:hover,
 .customer-search-results::-webkit-scrollbar-thumb:hover {
   opacity: 0.7;
+}
+
+/* Styling cho phần Store phù hợp với theme */
+.store-search-results {
+  margin-top: var(--spacing-md);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-md);
+  overflow: hidden;
+  max-height: 350px;
+  overflow-y: auto;
+}
+
+.store-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.store-table th {
+  background-color: var(--background-color);
+  padding: var(--table-cell-padding);
+  text-align: left;
+  font-weight: var(--font-weight-medium);
+  color: var(--text-color);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.store-table td {
+  padding: var(--table-cell-padding);
+  border-bottom: 1px solid var(--border-color);
+  color: var(--text-color);
+  vertical-align: middle;
+}
+
+.store-table tr:hover {
+  background-color: var(--hover-background);
+}
+
+.store-select-button {
+  background-color: var(--text-color);
+  color: var(--background-color);
+  border: none;
+  border-radius: var(--border-radius-md);
+  padding: var(--button-padding);
+  cursor: pointer;
+  font-size: var(--font-size-xs);
+  transition: all var(--transition-fast);
+  text-align: center;
+}
+
+.store-select-button:hover {
+  opacity: 0.9;
+}
+
+.selected-store {
+  background: var(--card-background);
+  border-radius: var(--border-radius-lg);
+  padding: var(--spacing-md);
+  border: 1px solid var(--border-color);
+  margin-bottom: var(--spacing-md);
+}
+
+.selected-store h3 {
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-semibold);
+  margin: 0 0 var(--spacing-sm) 0;
+  color: var(--text-color);
+}
+
+.store-info {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+.store-info-header {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.store-info-header h4 {
+  margin: 0;
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-color);
+}
+
+.store-info-details {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-md);
+}
+
+.store-info-item {
+  display: flex;
+  flex-direction: column;
+  min-width: 200px;
+  padding: var(--spacing-xs) var(--spacing-sm);
+  background: var(--hover-background);
+  border-radius: var(--border-radius-md);
+  flex: 1;
+}
+
+.store-info-label {
+  font-size: var(--font-size-xs);
+  color: var(--text-color);
+  opacity: 0.7;
+}
+
+.store-info-item p:last-child {
+  font-size: var(--font-size-sm);
+  color: var(--text-color);
+  margin: 0;
+  font-weight: var(--font-weight-medium);
+}
+
+.no-results {
+  padding: var(--spacing-md);
+  text-align: center;
+  color: var(--text-color);
+  opacity: 0.7;
+  font-style: italic;
+  background-color: var(--hover-background);
+  border-radius: var(--border-radius-md);
+  margin-top: var(--spacing-md);
+}
+
+.loading {
+  padding: var(--spacing-md);
+  text-align: center;
+  color: var(--text-color);
+  opacity: 0.7;
+  background-color: var(--hover-background);
+  border-radius: var(--border-radius-md);
+  margin-top: var(--spacing-md);
+}
+
+/* Nút tiếp tục */
+.order-continue-button {
+  padding: var(--button-padding);
+  border: none;
+  border-radius: var(--border-radius-md);
+  background: var(--text-color);
+  color: var(--background-color);
+  font-weight: var(--font-weight-medium);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.order-continue-button:hover {
+  opacity: 0.9;
+}
+
+.order-continue-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .store-info-details {
+    flex-direction: column;
+    gap: var(--spacing-xs);
+  }
+  
+  .store-info-item {
+    min-width: auto;
+  }
+  
+  .store-table th:nth-child(3),
+  .store-table td:nth-child(3) {
+    display: none;
+  }
+}
+
+@media (max-width: 576px) {
+  .store-table th:nth-child(4),
+  .store-table td:nth-child(4) {
+    display: none;
+  }
+}
+
+.store-name {
+  margin: 0 0 5px 0;
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-color);
+}
+
+.store-id {
+  margin: 0;
+  font-size: var(--font-size-xs);
+  color: var(--text-color);
+  opacity: 0.7;
 } 

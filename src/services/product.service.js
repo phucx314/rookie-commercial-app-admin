@@ -34,6 +34,7 @@ class ProductService {
 
     async getPaginatedProductsByStore(storeId, pageIndex = 1, pageSize = 10) {
         try {
+            console.log('Fetching paginated products for store:', storeId);
             const response = await axios.get('/Product/paged', { 
                 params: { 
                     pageIndex, 
@@ -41,6 +42,7 @@ class ProductService {
                     storeId
                 } 
             });
+            console.log('Store products API response:', response.data);
             return response.data;
         } catch (error) {
             console.error('Error fetching products by store:', error);
@@ -71,6 +73,20 @@ class ProductService {
             });
             return response.data;
         } catch (error) {
+            throw error;
+        }
+    }
+
+    async searchProductsByStore(storeId, searchTerm, pageIndex = 1, pageSize = 10) {
+        try {
+            console.log('Calling API with storeId:', storeId, 'searchTerm:', searchTerm);
+            const response = await axios.get('/Product/search', { 
+                params: { searchTerm, pageIndex, pageSize, storeId } 
+            });
+            console.log('API response for store products:', response.data);
+            return response.data;
+        } catch (error) {
+            console.error('Error searching products by store:', error);
             throw error;
         }
     }

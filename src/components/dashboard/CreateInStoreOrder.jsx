@@ -4,6 +4,7 @@ import { ArrowLeftIcon, PrinterIcon } from '@heroicons/react/24/outline';
 import './CreateInStoreOrder.css';
 import orderService from '../../services/order.service';
 import productService from '../../services/product.service';
+import storeService from '../../services/store.service';
 import { toastService } from '../../services/toast.service';
 
 const CreateInStoreOrder = () => {
@@ -31,11 +32,18 @@ const CreateInStoreOrder = () => {
   const [selectedCustomer, setSelectedCustomer] = useState(null);
   const [isNewCustomer, setIsNewCustomer] = useState(false);
 
+  // State for stores
+  const [stores, setStores] = useState([]);
+  const [selectedStore, setSelectedStore] = useState(null);
+  const [storeSearchTerm, setStoreSearchTerm] = useState('');
+  const [loadingStores, setLoadingStores] = useState(false);
+
   // State for products
   const [products, setProducts] = useState([]);
   const [productSearchTerm, setProductSearchTerm] = useState('');
   const [selectedProducts, setSelectedProducts] = useState([]);
   const [totalAmount, setTotalAmount] = useState(0);
+  const [loadingProducts, setLoadingProducts] = useState(false);
 
   // State for order
   const [loading, setLoading] = useState(false);
@@ -47,23 +55,97 @@ const CreateInStoreOrder = () => {
   const [createdOrder, setCreatedOrder] = useState(null);
 
   useEffect(() => {
-    loadInitialProducts();
+    // Original effect for loading customers, now keep it empty
   }, []);
-
+  
   useEffect(() => {
     // Calculate total when selected products change
     calculateTotal();
   }, [selectedProducts]);
 
-  const loadInitialProducts = async () => {
-    try {
-      const data = await productService.getAllProducts();
-      // Đảm bảo luôn là mảng
-      setProducts(Array.isArray(data) ? data : (data.items || []));
-    } catch (error) {
-      console.error('Unable to load product list', error);
-      setProducts([]);
+  useEffect(() => {
+    // Load available stores when tab changes to store selection
+    if (activeTab === '2') {
+      loadInitialStores();
     }
+  }, [activeTab]);
+
+  const loadInitialStores = async () => {
+    try {
+      setLoadingStores(true);
+      const data = await storeService.getAllStores();
+      // Đảm bảo luôn là mảng
+      setStores(Array.isArray(data) ? data : (data.items || []));
+    } catch (error) {
+      console.error('Unable to load store list', error);
+      toastService.error('Could not load stores');
+      setStores([]);
+    } finally {
+      setLoadingStores(false);
+    }
+  };
+
+  const loadProductsByStore = async (storeId) => {
+    if (!storeId) return;
+    
+    try {
+      setLoadingProducts(true);
+      console.log('Loading products for store:', storeId);
+      // Thay đổi để lấy sản phẩm theo cửa hàng
+      const data = await productService.getPaginatedProductsByStore(storeId);
+      console.log('Products loaded for store:', data);
+      
+      // Đảm bảo chỉ hiển thị sản phẩm của cửa hàng đã chọn
+      const filteredItems = Array.isArray(data) 
+        ? data.filter(p => p.storeId === storeId)
+        : (data.items || []).filter(p => p.storeId === storeId);
+        
+      console.log('Filtered store products:', filteredItems);
+      // Đảm bảo luôn là mảng
+      setProducts(filteredItems);
+      // Reset product search
+      setProductSearchTerm('');
+    } catch (error) {
+      console.error(`Unable to load products for store ${storeId}`, error);
+      toastService.error('Could not load products for the selected store');
+      setProducts([]);
+    } finally {
+      setLoadingProducts(false);
+    }
+  };
+
+  const handleStoreSearch = async () => {
+    try {
+      setLoadingStores(true);
+      if (!storeSearchTerm) {
+        await loadInitialStores();
+        return;
+      }
+      const data = await storeService.searchStores(storeSearchTerm);
+      // Đảm bảo luôn là mảng
+      setStores(Array.isArray(data) ? data : (data.items || []));
+    } catch (error) {
+      console.error('Error searching stores', error);
+      setStores([]);
+    } finally {
+      setLoadingStores(false);
+    }
+  };
+
+  const handleSelectStore = (store) => {
+    if (selectedProducts.length > 0) {
+      if (!window.confirm('Changing store will clear your current cart. Continue?')) {
+        return;
+      }
+      // Clear selected products when store changes
+      setSelectedProducts([]);
+    }
+    
+    setSelectedStore(store);
+    // Load products for the selected store
+    loadProductsByStore(store.id);
+    // Move to products tab
+    setActiveTab('3');
   };
 
   const handleSearchCustomers = async () => {
@@ -89,24 +171,42 @@ const CreateInStoreOrder = () => {
   };
 
   const handleSearchProducts = async () => {
+    if (!selectedStore) {
+      toastService.warning('Please select a store first');
+      return;
+    }
+    
     try {
+      setLoadingProducts(true);
+      console.log('Searching products for store:', selectedStore.id);
+      
       if (!productSearchTerm) {
-        loadInitialProducts();
+        await loadProductsByStore(selectedStore.id);
         return;
       }
-      const data = await productService.searchProducts(productSearchTerm);
-      // Đảm bảo luôn là mảng
-      setProducts(Array.isArray(data) ? data : (data.items || []));
+      // Tìm kiếm sản phẩm theo cửa hàng đã chọn
+      const data = await productService.searchProductsByStore(selectedStore.id, productSearchTerm);
+      console.log('Search results by store:', data);
+      
+      // Đảm bảo chỉ hiển thị sản phẩm của cửa hàng đã chọn
+      const filteredItems = Array.isArray(data) 
+        ? data.filter(p => p.storeId === selectedStore.id)
+        : (data.items || []).filter(p => p.storeId === selectedStore.id);
+      
+      console.log('Filtered results:', filteredItems);
+      setProducts(filteredItems);
     } catch (error) {
       console.error('Error searching products', error);
       setProducts([]);
+    } finally {
+      setLoadingProducts(false);
     }
   };
 
   const handleSelectCustomer = (customer) => {
     setSelectedCustomer(customer);
     setIsNewCustomer(false);
-    setActiveTab('2'); // Switch to products tab
+    setActiveTab('2'); // Switch to store selection tab
   };
 
   const handleAddToCart = (product) => {
@@ -119,7 +219,16 @@ const CreateInStoreOrder = () => {
       );
       setSelectedProducts(updatedProducts);
     } else {
-      setSelectedProducts([...selectedProducts, { ...product, quantity }]);
+      // Thêm thông tin cửa hàng vào sản phẩm
+      setSelectedProducts([...selectedProducts, { 
+        ...product, 
+        quantity,
+        storeInfo: {
+          id: selectedStore.id,
+          name: selectedStore.name,
+          logoUrl: selectedStore.logoUrl
+        }
+      }]);
     }
     // Reset input về 1 sau khi add
     setProductQuantities({ ...productQuantities, [product.id]: 1 });
@@ -176,7 +285,7 @@ const CreateInStoreOrder = () => {
     if (validateNewCustomerForm()) {
       setIsNewCustomer(true);
       setSelectedCustomer(null);
-      setActiveTab('2'); // Switch to products tab
+      setActiveTab('2'); // Switch to store selection tab
     }
   };
 
@@ -191,6 +300,11 @@ const CreateInStoreOrder = () => {
 
     if (!selectedCustomer && !isNewCustomer) {
       toastService.error('Please select or create a customer');
+      return;
+    }
+
+    if (!selectedStore) {
+      toastService.error('Please select a store');
       return;
     }
 
@@ -366,13 +480,19 @@ const CreateInStoreOrder = () => {
             className={`create-order-tab-item ${activeTab === '2' ? 'active' : ''}`}
             onClick={() => (selectedCustomer || isNewCustomer) && setActiveTab('2')}
           >
-            2. Add Products
+            2. Select Store
           </div>
           <div 
             className={`create-order-tab-item ${activeTab === '3' ? 'active' : ''}`}
-            onClick={() => selectedProducts.length > 0 && setActiveTab('3')}
+            onClick={() => selectedStore && setActiveTab('3')}
           >
-            3. Review & Checkout
+            3. Add Products
+          </div>
+          <div 
+            className={`create-order-tab-item ${activeTab === '4' ? 'active' : ''}`}
+            onClick={() => selectedProducts.length > 0 && setActiveTab('4')}
+          >
+            4. Review & Checkout
           </div>
         </div>
 
@@ -558,6 +678,167 @@ const CreateInStoreOrder = () => {
               )}
 
               <div className="create-order-search-section">
+                <h2>Select a Store</h2>
+                <div className="create-order-search-bar">
+                  <div className="create-order-search-input-container">
+                    <input
+                      type="text"
+                      className="create-order-search-input"
+                      placeholder="Search by store name"
+                      value={storeSearchTerm}
+                      onChange={(e) => setStoreSearchTerm(e.target.value)}
+                      onKeyDown={(e) => e.key === 'Enter' && handleStoreSearch()}
+                    />
+                  </div>
+                  <button
+                    className="create-order-search-button"
+                    onClick={handleStoreSearch}
+                  >
+                    Search
+                  </button>
+                </div>
+
+                {loadingStores ? (
+                  <div className="loading">Loading stores...</div>
+                ) : stores.length > 0 ? (
+                  <div className="store-search-results">
+                    <table className="store-table">
+                      <thead>
+                        <tr>
+                          <th>Logo</th>
+                          <th>Name</th>
+                          <th>Address</th>
+                          <th>Phone</th>
+                          <th>Action</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {stores.map((store) => (
+                          <tr key={store.id}>
+                            <td>
+                              {store.logoUrl ? (
+                                <img 
+                                  src={store.logoUrl} 
+                                  alt={store.name} 
+                                  style={{ 
+                                    width: 45, 
+                                    height: 45, 
+                                    objectFit: 'cover', 
+                                    borderRadius: 'var(--border-radius-md)'
+                                  }} 
+                                />
+                              ) : (
+                                <div style={{ 
+                                  width: 45, 
+                                  height: 45, 
+                                  backgroundColor: 'var(--hover-background)', 
+                                  borderRadius: 'var(--border-radius-md)',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  color: 'var(--text-color)',
+                                  opacity: '0.7',
+                                  fontSize: 'var(--font-size-md)',
+                                  fontWeight: 'var(--font-weight-medium)'
+                                }}>
+                                  {store.name.charAt(0).toUpperCase()}
+                                </div>
+                              )}
+                            </td>
+                            <td>{store.name}</td>
+                            <td>{store.address || 'N/A'}</td>
+                            <td>{store.phoneNumber || 'N/A'}</td>
+                            <td>
+                              <button 
+                                className="store-select-button"
+                                onClick={() => handleSelectStore(store)}
+                              >
+                                Select
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                ) : (
+                  <div className="no-results">No stores found</div>
+                )}
+              </div>
+
+              <div className="create-order-actions">
+                <button
+                  className="order-cancel-button"
+                  onClick={() => setActiveTab('1')}
+                  type="button"
+                >
+                  Back
+                </button>
+              </div>
+            </div>
+          )}
+
+          {activeTab === '3' && (
+            <div>
+              {selectedStore && (
+                <div className="selected-store">
+                  <h3>Selected Store</h3>
+                  <div className="store-info">
+                    <div className="store-info-header">
+                      {selectedStore.logoUrl ? (
+                        <img 
+                          src={selectedStore.logoUrl} 
+                          alt={selectedStore.name} 
+                          style={{ 
+                            width: 60, 
+                            height: 60, 
+                            objectFit: 'cover', 
+                            borderRadius: 'var(--border-radius-md)', 
+                            marginRight: 'var(--spacing-sm)'
+                          }} 
+                        />
+                      ) : (
+                        <div style={{ 
+                          width: 60, 
+                          height: 60, 
+                          backgroundColor: 'var(--hover-background)', 
+                          borderRadius: 'var(--border-radius-md)',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          color: 'var(--text-color)',
+                          opacity: '0.7',
+                          fontSize: 'var(--font-size-lg)',
+                          fontWeight: 'var(--font-weight-medium)',
+                          marginRight: 'var(--spacing-sm)'
+                        }}>
+                          {selectedStore.name.charAt(0).toUpperCase()}
+                        </div>
+                      )}
+                      <div>
+                        <h4 className="store-name">{selectedStore.name}</h4>
+                        <p className="store-id">ID: {selectedStore.id.substring(0, 8)}...</p>
+                      </div>
+                    </div>
+                    <div className="store-info-details">
+                      <div className="store-info-item">
+                        <p className="store-info-label">Address</p>
+                        <p>{selectedStore.address || 'N/A'}</p>
+                      </div>
+                      <div className="store-info-item">
+                        <p className="store-info-label">Phone</p>
+                        <p>{selectedStore.phoneNumber || 'N/A'}</p>
+                      </div>
+                      <div className="store-info-item">
+                        <p className="store-info-label">Email</p>
+                        <p>{selectedStore.email || 'N/A'}</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              <div className="create-order-search-section">
                 <h2>Search for Products</h2>
                 <div className="create-order-search-bar">
                   <div className="create-order-search-input-container">
@@ -578,60 +859,68 @@ const CreateInStoreOrder = () => {
                   </button>
                 </div>
 
-                <div className="create-order-product-list">
-                  <table className="product-table">
-                    <thead>
-                      <tr>
-                        <th>Image</th>
-                        <th>Name</th>
-                        <th>SKU</th>
-                        <th>Category</th>
-                        <th>Price</th>
-                        <th>Stock</th>
-                        <th>Quantity</th>
-                        <th>Action</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {products.map((product) => (
-                        <tr key={product.id}>
-                          <td>
-                            {product.imageUrl ? (
-                              <img src={product.imageUrl} alt={product.name} style={{ width: 48, height: 48, objectFit: 'cover', borderRadius: 4 }} />
-                            ) : (
-                              <div style={{ width: 48, height: 48, background: '#eee', borderRadius: 4 }} />
-                            )}
-                          </td>
-                          <td>{product.name}</td>
-                          <td>{product.sku || 'N/A'}</td>
-                          <td>{product.category?.name || product.categoryName || (() => {console.log('No category for product:', product); return 'N/A';})()}</td>
-                          <td>{productService.formatPrice(product.price)}</td>
-                          <td>{product.stockQuantity}</td>
-                          <td>
-                            <input
-                              type="number"
-                              className="create-order-quantity-input"
-                              value={productQuantities[product.id] || 1}
-                              min={1}
-                              max={product.stockQuantity}
-                              onChange={e => setProductQuantities({ ...productQuantities, [product.id]: e.target.value })}
-                            />
-                          </td>
-                          <td>
-                            <button
-                              className="product-add-button"
-                              onClick={() => handleAddToCart(product)}
-                              disabled={product.stockQuantity === 0}
-                              title="Add to cart"
-                            >
-                              <span style={{ fontSize: 16, fontWeight: 'bold' }}>+</span>
-                            </button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+                {loadingProducts ? (
+                  <div className="loading">Loading products...</div>
+                ) : (
+                  <div className="create-order-product-list">
+                    {products.length > 0 ? (
+                      <table className="product-table">
+                        <thead>
+                          <tr>
+                            <th>Image</th>
+                            <th>Name</th>
+                            <th>SKU</th>
+                            <th>Category</th>
+                            <th>Price</th>
+                            <th>Stock</th>
+                            <th>Quantity</th>
+                            <th>Action</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {products.map((product) => (
+                            <tr key={product.id}>
+                              <td>
+                                {product.imageUrl ? (
+                                  <img src={product.imageUrl} alt={product.name} style={{ width: 48, height: 48, objectFit: 'cover', borderRadius: 4 }} />
+                                ) : (
+                                  <div style={{ width: 48, height: 48, background: '#eee', borderRadius: 4 }} />
+                                )}
+                              </td>
+                              <td>{product.name}</td>
+                              <td>{product.sku || 'N/A'}</td>
+                              <td>{product.category?.name || product.categoryName || (() => {console.log('No category for product:', product); return 'N/A';})()}</td>
+                              <td>{productService.formatPrice(product.price)}</td>
+                              <td>{product.stockQuantity}</td>
+                              <td>
+                                <input
+                                  type="number"
+                                  className="create-order-quantity-input"
+                                  value={productQuantities[product.id] || 1}
+                                  min={1}
+                                  max={product.stockQuantity}
+                                  onChange={e => setProductQuantities({ ...productQuantities, [product.id]: e.target.value })}
+                                />
+                              </td>
+                              <td>
+                                <button
+                                  className="product-add-button"
+                                  onClick={() => handleAddToCart(product)}
+                                  disabled={product.stockQuantity === 0}
+                                  title="Add to cart"
+                                >
+                                  <span style={{ fontSize: 16, fontWeight: 'bold' }}>+</span>
+                                </button>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    ) : (
+                      <div className="no-results">No products found for this store</div>
+                    )}
+                  </div>
+                )}
               </div>
 
               {selectedProducts.length > 0 && (
@@ -685,14 +974,14 @@ const CreateInStoreOrder = () => {
               <div className="create-order-actions">
                 <button
                   className="order-cancel-button"
-                  onClick={() => setActiveTab('1')}
+                  onClick={() => setActiveTab('2')}
                   type="button"
                 >
                   Back
                       </button>
                 <button
-                  className="order-create-button"
-                  onClick={() => selectedProducts.length > 0 && setActiveTab('3')}
+                  className="order-continue-button"
+                  onClick={() => selectedProducts.length > 0 && setActiveTab('4')}
                   type="button"
                   disabled={selectedProducts.length === 0}
                 >
@@ -702,7 +991,7 @@ const CreateInStoreOrder = () => {
             </div>
           )}
 
-          {activeTab === '3' && (
+          {activeTab === '4' && (
             <div>
               {(selectedCustomer || isNewCustomer) && (
                 <div className="selected-customer">
@@ -732,19 +1021,19 @@ const CreateInStoreOrder = () => {
                         <div className="customer-info-item">
                           <p className="customer-info-label">Username</p>
                           <p>{newCustomerForm.username}</p>
-                </div>
+                        </div>
                         <div className="customer-info-item">
                           <p className="customer-info-label">Full Name</p>
                           <p>{newCustomerForm.fullName}</p>
-                    </div>
+                        </div>
                         <div className="customer-info-item">
                           <p className="customer-info-label">Email</p>
                           <p>{newCustomerForm.email}</p>
-                    </div>
+                        </div>
                         <div className="customer-info-item">
                           <p className="customer-info-label">Phone Number</p>
                           <p>{newCustomerForm.phoneNumber || 'N/A'}</p>
-                    </div>
+                        </div>
                       </>
                     )}
                   </div>
@@ -879,7 +1168,7 @@ const CreateInStoreOrder = () => {
                   <div className="create-order-actions">
                     <button
                       className="order-cancel-button"
-                      onClick={() => setActiveTab('2')}
+                      onClick={() => setActiveTab('3')}
                       type="button"
                     >
                       Back
