@@ -22,7 +22,7 @@ body {
   width: var(--sidebar-width);
   background-color: var(--card-background);
   border-right: 1px solid var(--border-color);
-  padding: var(--spacing-md);
+  /* padding: var(--spacing-md); */
   position: fixed;
   height: 100vh;
   overflow-y: auto;

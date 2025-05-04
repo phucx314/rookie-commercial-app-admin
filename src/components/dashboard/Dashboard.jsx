@@ -49,6 +49,13 @@ const Dashboard = () => {
   const [revenueByDate, setRevenueByDate] = useState([]);
   const { isDarkMode } = useTheme();
 
+  // Date range states
+  const [dateRange, setDateRange] = useState({
+    startDate: new Date().toISOString().split('T')[0],
+    endDate: new Date().toISOString().split('T')[0]
+  });
+  const [dateError, setDateError] = useState('');
+
   useEffect(() => {
     fetchDashboardData();
   }, []);
@@ -90,13 +97,48 @@ const Dashboard = () => {
       setTopProducts(dashboardService.getTopProducts(data.products, data.orders));
       setTopCategories(dashboardService.getTopCategories(data.categories, data.orders, data.products));
 
-      // Lấy dữ liệu cho biểu đồ
-      setOrdersByDate(dashboardService.getOrdersByDate(data.orders));
-      setRevenueByDate(dashboardService.getRevenueByDate(data.orders));
+      // Set default date range to last 7 days
+      const today = new Date();
+      const sevenDaysAgo = new Date(today);
+      sevenDaysAgo.setDate(today.getDate() - 7);
+      
+      setDateRange({
+        startDate: sevenDaysAgo.toISOString().split('T')[0],
+        endDate: today.toISOString().split('T')[0]
+      });
+
+      // Lấy dữ liệu cho biểu đồ với date range mặc định
+      updateChartData(data.orders, sevenDaysAgo, today);
     } catch (error) {
       console.error("Error fetching dashboard data:", error);
       toastService.error("Cannot load dashboard data. Please try again later.");
     }
+  };
+
+  const handleDateChange = (e) => {
+    const { name, value } = e.target;
+    setDateRange(prev => ({
+      ...prev,
+      [name]: value
+    }));
+    setDateError('');
+  };
+
+  const updateChartData = (orders, startDate, endDate) => {
+    try {
+      dashboardService.validateDateRange(startDate, endDate);
+      setOrdersByDate(dashboardService.getOrdersByDateRange(orders, startDate, endDate));
+      setRevenueByDate(dashboardService.getRevenueByDateRange(orders, startDate, endDate));
+      setDateError('');
+    } catch (error) {
+      setDateError(error.message);
+      toastService.error(error.message);
+    }
+  };
+
+  const handleDateRangeSubmit = (e) => {
+    e.preventDefault();
+    updateChartData(dashboardData.orders, dateRange.startDate, dateRange.endDate);
   };
 
   // Lấy dữ liệu và cấu hình biểu đồ từ service
@@ -136,7 +178,37 @@ const Dashboard = () => {
         {/* Combined Chart */}
         <div className="chart-section">
           <div className="chart-card">
-            <h3>Chart of orders and revenue (last 7 days)</h3>
+            <div className="chart-header">
+              <h3>Chart of Orders and Revenue</h3>
+              <form onSubmit={handleDateRangeSubmit} className="date-range-form">
+                <div className="date-range-inputs">
+                  <div className="date-input-group">
+                    <label>From:</label>
+                    <input
+                      type="date"
+                      name="startDate"
+                      value={dateRange.startDate}
+                      onChange={handleDateChange}
+                      min={dashboardService.MIN_DATE.toISOString().split('T')[0]}
+                      max={new Date().toISOString().split('T')[0]}
+                    />
+                  </div>
+                  <div className="date-input-group">
+                    <label>To:</label>
+                    <input
+                      type="date"
+                      name="endDate"
+                      value={dateRange.endDate}
+                      onChange={handleDateChange}
+                      min={dashboardService.MIN_DATE.toISOString().split('T')[0]}
+                      max={new Date().toISOString().split('T')[0]}
+                    />
+                  </div>
+                  <button type="submit" className="apply-date-range">Apply</button>
+                </div>
+                {dateError && <div className="date-error">{dateError}</div>}
+              </form>
+            </div>
             <div className="chart-wrapper">
               <Line data={combinedChartData} options={combinedChartOptions} />
             </div>
@@ -163,7 +235,7 @@ const Dashboard = () => {
           </div>
 
           <div className="ranking-card">
-            <h3>Top 3 Products by Revenue</h3>
+            <h3>Top Products by Revenue</h3>
             <div className="ranking-list">
               {topProducts.map((product, index) => (
                 <div key={product.id} className="ranking-item">
@@ -180,7 +252,7 @@ const Dashboard = () => {
           </div>
 
           <div className="ranking-card">
-            <h3>Top 3 Categories by Sold Quantity</h3>
+            <h3>Top Categories by Sold Quantity</h3>
             <div className="ranking-list">
               {topCategories.map((category, index) => (
                 <div key={category.id} className="ranking-item">

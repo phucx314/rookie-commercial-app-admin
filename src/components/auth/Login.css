@@ -55,10 +55,6 @@ html, body {
   font-size: 18px;
 }
 
-.form-group {
-  margin-bottom: var(--spacing-md);
-}
-
 .form-group label {
   display: block;
   margin-bottom: var(--spacing-xs);
@@ -85,11 +81,12 @@ html, body {
 button[type="submit"] {
   width: 100%;
   padding: 12px;
+  margin-top: 16px;
   background: var(--text-color);
   color: var(--background-color);
   border: none;
   border-radius: 6px;
-  font-size: 16px;
+  font-size: var(--font-size-md);
   cursor: pointer;
   transition: all 0.3s;
 }

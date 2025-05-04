@@ -1,15 +1,17 @@
 import React from 'react';
-// import OrderList from '../components/dashboard/OrderList';
+import { Routes, Route } from 'react-router-dom';
+import OrderList from '../components/dashboard/OrderList';
+import CreateInStoreOrderPage from './CreateInStoreOrderPage';
 
 const OrdersView = () => {
   return (
-    <div className="orders-view">
-      {/* <OrderList /> */}
-      <div className="p-8 text-center">
-        <h2 className="text-2xl font-bold mb-4">Quản lý đơn hàng</h2>
-        <p className="text-gray-600">Tính năng đang được phát triển...</p>
-      </div>
-    </div>
+    <Routes>
+      <Route index element={<OrderList />} />
+      <Route path="create" element={<CreateInStoreOrderPage />} />
+      {/* Thêm route cho view và edit sau */}
+      <Route path=":id" element={<div>Order Details (Coming Soon)</div>} />
+      <Route path="edit/:id" element={<div>Edit Order (Coming Soon)</div>} />
+    </Routes>
   );
 };
 

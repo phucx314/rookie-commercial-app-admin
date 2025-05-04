@@ -89,6 +89,7 @@ class ProductService {
             const response = await axios.post('/Product', productData);
             return response.data;
         } catch (error) {
+            console.error('Error creating product:', error);
             throw error;
         }
     }
@@ -114,14 +115,43 @@ class ProductService {
     // Các hàm xử lý dữ liệu
     formatDate(dateString) {
         if (!dateString) return '-';
-        const date = new Date(dateString);
-        return date.toLocaleDateString('vi-VN', {
-            year: 'numeric',
-            month: '2-digit',
-            day: '2-digit',
-            hour: '2-digit',
-            minute: '2-digit'
-        });
+        
+        // console.log('Formatting date:', dateString);
+        
+        try {
+            // Chuẩn hóa định dạng datetime
+            // Đảm bảo chuỗi có thông tin múi giờ (với DateTimeOffset có dạng +00:00, DateTime không có)
+            let date;
+            
+            // Kiểm tra xem dateString có thông tin về múi giờ không (dạng +00:00 hoặc Z)
+            if (dateString.includes('+') || dateString.includes('Z')) {
+                // Đây là DateTimeOffset, giữ nguyên
+                date = new Date(dateString);
+            } else {
+                // Đây là DateTime không có thông tin múi giờ, coi như UTC
+                date = new Date(dateString + 'Z'); // Thêm Z để đánh dấu là UTC
+            }
+            
+            // console.log('Parsed date object:', date.toString());
+            
+            // Thiết lập múi giờ Việt Nam (UTC+7)
+            const options = {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit',
+                hour12: false,
+                timeZone: 'Asia/Ho_Chi_Minh'  // Thiết lập múi giờ Việt Nam (UTC+7)
+            };
+            
+            const formattedDate = date.toLocaleString('vi-VN', options);
+            // console.log('Formatted date:', formattedDate);
+            return formattedDate;
+        } catch (error) {
+            console.error('Error formatting date:', error);
+            return dateString; // Trả về chuỗi gốc nếu có lỗi
+        }
     }
 
     formatPrice(price) {

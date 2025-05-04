@@ -24,6 +24,22 @@ const StoreList = () => {
         logoUrl: ''
     });
     
+    // Thêm state cho modal tạo cửa hàng mới
+    const [showCreateModal, setShowCreateModal] = useState(false);
+    const [createForm, setCreateForm] = useState({
+        name: '',
+        description: '',
+        address: '',
+        phoneNumber: '',
+        email: '',
+        logoUrl: '',
+        sellerId: ''
+    });
+    
+    // State cho danh sách sellers
+    const [sellers, setSellers] = useState([]);
+    const [loadingSellers, setLoadingSellers] = useState(false);
+    
     // Pagination states
     const [pagination, setPagination] = useState({
         pageIndex: parseInt(searchParams.get('page')) || 1,
@@ -428,6 +444,100 @@ const StoreList = () => {
         }
     };
 
+    // Fetch danh sách Sellers
+    useEffect(() => {
+        const fetchSellers = async () => {
+            try {
+                setLoadingSellers(true);
+                const sellersData = await storeService.getSellersList();
+                console.log('Sellers data:', sellersData);
+                setSellers(sellersData);
+            } catch (error) {
+                console.error('Error fetching sellers list:', error);
+            } finally {
+                setLoadingSellers(false);
+            }
+        };
+        
+        // Chỉ gọi API khi modal hiển thị
+        if (showCreateModal) {
+            fetchSellers();
+        }
+    }, [showCreateModal]);
+    
+    // Xử lý submit form tạo cửa hàng mới
+    const handleCreateSubmit = async (e) => {
+        e.preventDefault();
+        
+        try {
+            setLoading(true);
+            
+            // Kiểm tra dữ liệu đầu vào
+            if (!createForm.name || !createForm.address || !createForm.phoneNumber || !createForm.email) {
+                toastService.error('Please fill in all required fields');
+                setLoading(false);
+                return;
+            }
+            
+            // Kiểm tra xem có sellers không
+            if (sellers.length === 0) {
+                toastService.error('Cannot create store: No active sellers available in the system');
+                setLoading(false);
+                return;
+            }
+            
+            if (!createForm.sellerId) {
+                toastService.error('Please select a seller for this store');
+                setLoading(false);
+                return;
+            }
+            
+            // Kiểm tra xem seller đã được chọn có hợp lệ không
+            const selectedSeller = sellers.find(seller => seller.id === createForm.sellerId);
+            if (!selectedSeller) {
+                toastService.error('The selected seller is not valid');
+                setLoading(false);
+                return;
+            }
+            
+            // Gọi API tạo cửa hàng mới
+            await toastService.promise(
+                storeService.createStore(createForm),
+                {
+                    pending: 'Creating new store...',
+                    success: `Store created successfully for seller ${selectedSeller.username}!`,
+                    error: 'Failed to create store. Please try again.'
+                }
+            );
+            
+            // Đóng modal và làm mới dữ liệu
+            setShowCreateModal(false);
+            setCreateForm({
+                name: '',
+                description: '',
+                address: '',
+                phoneNumber: '',
+                email: '',
+                logoUrl: '',
+                sellerId: ''
+            });
+            fetchPaginatedStores();
+        } catch (error) {
+            console.error('Error creating store:', error);
+        } finally {
+            setLoading(false);
+        }
+    };
+    
+    // Xử lý thay đổi giá trị form tạo cửa hàng mới
+    const handleCreateChange = (e) => {
+        const { name, value } = e.target;
+        setCreateForm(prev => ({
+            ...prev,
+            [name]: value
+        }));
+    };
+
     if (loading) return <div className="loading">Loading stores...</div>;
 
     return (
@@ -435,6 +545,12 @@ const StoreList = () => {
             <div className="store-list-header">
                 <h2>Store List</h2>
                 <div className="header-actions">
+                    <button 
+                        className="create-store-btn"
+                        onClick={() => setShowCreateModal(true)}
+                    >
+                        Create New Store
+                    </button>
                     <button
                         className={`select-mode-btn ${selectMode ? 'active' : ''}`}
                         onClick={toggleSelectMode}
@@ -592,65 +708,190 @@ const StoreList = () => {
                     <div className="modal-content">
                         <h2>Edit Store</h2>
                         <form onSubmit={handleEditSubmit}>
-                            <div className="form-group">
-                                <label>Store Name</label>
-                                <input
-                                    type="text"
-                                    name="name"
-                                    value={editForm.name}
-                                    onChange={handleEditChange}
-                                    required
-                                />
+                            <div className="modal-form-content">
+                                <div className="form-layout two-columns">
+                                    <div className="form-group">
+                                        <label>Store Name</label>
+                                        <input
+                                            type="text"
+                                            name="name"
+                                            value={editForm.name}
+                                            onChange={handleEditChange}
+                                            required
+                                        />
+                                    </div>
+                                    <div className="form-group">
+                                        <label>Logo URL</label>
+                                        <input
+                                            type="url"
+                                            name="logoUrl"
+                                            value={editForm.logoUrl}
+                                            onChange={handleEditChange}
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="form-group">
+                                    <label>Description</label>
+                                    <textarea
+                                        name="description"
+                                        value={editForm.description}
+                                        onChange={handleEditChange}
+                                    />
+                                </div>
+
+                                <div className="form-layout two-columns">
+                                    <div className="form-group">
+                                        <label>Address</label>
+                                        <input
+                                            type="text"
+                                            name="address"
+                                            value={editForm.address}
+                                            onChange={handleEditChange}
+                                        />
+                                    </div>
+                                    <div className="form-group">
+                                        <label>Phone Number</label>
+                                        <input
+                                            type="tel"
+                                            name="phoneNumber"
+                                            value={editForm.phoneNumber}
+                                            onChange={handleEditChange}
+                                        />
+                                    </div>
+                                </div>
+                                <div className="form-group">
+                                    <label>Email</label>
+                                    <input
+                                        type="email"
+                                        name="email"
+                                        value={editForm.email}
+                                        onChange={handleEditChange}
+                                    />
+                                </div>
                             </div>
-                            <div className="form-group">
-                                <label>Description</label>
-                                <textarea
-                                    name="description"
-                                    value={editForm.description}
-                                    onChange={handleEditChange}
-                                />
-                            </div>
-                            <div className="form-group">
-                                <label>Address</label>
-                                <input
-                                    type="text"
-                                    name="address"
-                                    value={editForm.address}
-                                    onChange={handleEditChange}
-                                />
-                            </div>
-                            <div className="form-group">
-                                <label>Phone Number</label>
-                                <input
-                                    type="tel"
-                                    name="phoneNumber"
-                                    value={editForm.phoneNumber}
-                                    onChange={handleEditChange}
-                                />
-                            </div>
-                            <div className="form-group">
-                                <label>Email</label>
-                                <input
-                                    type="email"
-                                    name="email"
-                                    value={editForm.email}
-                                    onChange={handleEditChange}
-                                />
-                            </div>
-                            <div className="form-group">
-                                <label>Logo URL</label>
-                                <input
-                                    type="url"
-                                    name="logoUrl"
-                                    value={editForm.logoUrl}
-                                    onChange={handleEditChange}
-                                />
-                            </div>
+
                             <div className="modal-actions">
                                 <button type="button" onClick={() => setEditingStore(null)}>
                                     Cancel
                                 </button>
                                 <button type="submit">Save Changes</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+            
+            {showCreateModal && (
+                <div className="modal">
+                    <div className="modal-content">
+                        <h2>Create New Store</h2>
+                        <form onSubmit={handleCreateSubmit}>
+                            <div className="modal-form-content">
+                                <div className="form-layout two-columns">
+                                    <div className="form-group">
+                                        <label>Store Name <span className="required">*</span></label>
+                                        <input
+                                            type="text"
+                                            name="name"
+                                            value={createForm.name}
+                                            onChange={handleCreateChange}
+                                            required
+                                            placeholder="Enter store name"
+                                        />
+                                    </div>
+                                    <div className="form-group">
+                                        <label>Logo URL</label>
+                                        <input
+                                            type="url"
+                                            name="logoUrl"
+                                            value={createForm.logoUrl}
+                                            onChange={handleCreateChange}
+                                            placeholder="Enter logo URL"
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="form-group">
+                                    <label>Description</label>
+                                    <textarea
+                                        name="description"
+                                        value={createForm.description}
+                                        onChange={handleCreateChange}
+                                        placeholder="Enter store description"
+                                    />
+                                </div>
+
+                                <div className="form-layout two-columns">
+                                    <div className="form-group">
+                                        <label>Address <span className="required">*</span></label>
+                                        <input
+                                            type="text"
+                                            name="address"
+                                            value={createForm.address}
+                                            onChange={handleCreateChange}
+                                            required
+                                            placeholder="Enter store address"
+                                        />
+                                    </div>
+                                    <div className="form-group">
+                                        <label>Phone Number <span className="required">*</span></label>
+                                        <input
+                                            type="tel"
+                                            name="phoneNumber"
+                                            value={createForm.phoneNumber}
+                                            onChange={handleCreateChange}
+                                            required
+                                            placeholder="Enter phone number"
+                                        />
+                                    </div>
+                                </div>
+                                <div className="form-group">
+                                    <label>Email <span className="required">*</span></label>
+                                    <input
+                                        type="email"
+                                        name="email"
+                                        value={createForm.email}
+                                        onChange={handleCreateChange}
+                                        required
+                                        placeholder="Enter email address"
+                                    />
+                                </div>
+
+                                <div className="form-group">
+                                    <label>Store Owner (Seller) <span className="required">*</span></label>
+                                    <select
+                                        name="sellerId"
+                                        value={createForm.sellerId}
+                                        onChange={handleCreateChange}
+                                        required
+                                        disabled={loadingSellers}
+                                    >
+                                        <option value="">Select a seller</option>
+                                        {sellers.length > 0 ? (
+                                            sellers.map(seller => (
+                                                <option key={seller.id} value={seller.id}>
+                                                    {seller.username} ({seller.email})
+                                                </option>
+                                            ))
+                                        ) : (
+                                            <option value="" disabled>No active sellers found</option>
+                                        )}
+                                    </select>
+                                    {loadingSellers && <div className="loading-indicator">Loading sellers...</div>}
+                                    {!loadingSellers && sellers.length === 0 && (
+                                        <div className="warning-message">
+                                            No active sellers found. Please ensure there are users with the Seller role.
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+
+                            <div className="modal-actions">
+                                <button type="button" onClick={() => setShowCreateModal(false)}>
+                                    Cancel
+                                </button>
+                                <button type="submit">Create Store</button>
                             </div>
                         </form>
                     </div>

@@ -1,5 +1,7 @@
 .dashboard {
-  padding: 24px;
+  padding: 0px;
+  --chart-height: 80%;
+  --rankings-height: var(--chart-height);
 }
 
 .dashboard h1 {
@@ -17,7 +19,7 @@
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 24px;
-  margin-bottom: 32px;
+  margin-bottom: 24px;
 }
 
 .stat-card {
@@ -78,97 +80,184 @@
   grid-template-columns: 1fr 1fr;
   gap: var(--spacing-lg);
   margin-top: var(--spacing-lg);
+  height: calc(100vh - 300px); /* Trừ đi phần header và stats */
+  min-height: 600px;
 }
 
 .chart-section {
-  height: 50%;
+  height: 100%;
 }
 
 .chart-card {
   background-color: var(--card-background);
   border-radius: var(--border-radius-xl);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   padding: var(--spacing-lg);
   border: 1px solid var(--border-color);
   backdrop-filter: blur(10px);
   overflow: hidden;
-  min-height: 300px;
-  /* height: 100%; */
-  min-width: 500px;
+  min-width: 400px;
   display: flex;
   flex-direction: column;
+  height: var(--chart-height);
 }
 
-.chart-card h3 {
-  margin-top: 0;
+.chart-header {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
   margin-bottom: var(--spacing-md);
+}
+
+.chart-header h3 {
+  margin: 0;
   font-size: var(--font-size-md);
   font-weight: var(--font-weight-semibold);
   color: var(--text-color);
   text-align: center;
 }
 
+.date-range-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+.date-range-inputs {
+  display: flex;
+  gap: var(--spacing-md);
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: flex-start;
+}
+
+.date-input-group {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+}
+
+.date-input-group label {
+  color: var(--text-color);
+  font-size: var(--font-size-xs);
+  white-space: nowrap;
+}
+
+.date-input-group input[type="date"] {
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-md);
+  background: var(--background-color);
+  color: var(--text-color);
+  font-size: var(--font-size-xs);
+  min-width: 130px;
+}
+
+.date-input-group input[type="date"]:focus {
+  outline: none;
+  border-color: var(--text-color);
+  box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.1);
+}
+
+.chart-card .apply-date-range,
+.date-range-form .apply-date-range {
+  min-width: 80px;
+  width: auto;
+  padding: 0 16px;
+  font-size: var(--font-size-xs);
+  white-space: nowrap;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  background: var(--text-color);
+  color: var(--background-color);
+  border: none;
+  border-radius: var(--border-radius-md);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  box-sizing: border-box;
+  justify-content: center;
+}
+
+.chart-card .apply-date-range:hover,
+.date-range-form .apply-date-range:hover {
+  opacity: 0.9;
+}
+
+.date-error {
+  color: #ef4444;
+  font-size: var(--font-size-xs);
+  text-align: center;
+}
+
 .chart-wrapper {
   flex: 1;
-  min-height: 400px;
+  height: 300px;
   position: relative;
+  margin-top: var(--spacing-md);
 }
 
 /* Rankings Section */
 .rankings-section {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-rows: repeat(3, 1fr);
   gap: var(--spacing-md);
-  max-height: 500px;
-  overflow-y: auto;
-  scrollbar-width: none; /* Firefox */
-  -ms-overflow-style: none; /* IE and Edge */
+  height: var(--rankings-height);
+  overflow: hidden;
 }
 
-.rankings-section::-webkit-scrollbar {
-  display: none; /* Chrome, Safari, Opera */
-}
-
-.rankings-section .ranking-card {
-  margin: 0;
-  flex: 1;
-  max-height: 150px;
-  overflow-y: auto;
-  scrollbar-width: none; /* Firefox */
-  -ms-overflow-style: none; /* IE and Edge */
-}
-
-.rankings-section .ranking-card::-webkit-scrollbar {
-  display: none; /* Chrome, Safari, Opera */
-}
-
-/* Rankings */
 .ranking-card {
   background: var(--card-background);
   border-radius: 12px;
   padding: 16px;
-  height: min-content;
   border: 1px solid var(--border-color);
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0; /* Quan trọng cho scroll */
 }
 
 .ranking-card h3 {
   margin: 0 0 12px 0;
   color: var(--text-color);
   font-size: var(--font-size-md);
+  flex-shrink: 0; /* Không cho phép co lại */
 }
 
 .ranking-list {
   display: flex;
   flex-direction: column;
   gap: 8px;
+  overflow-y: auto;
+  flex: 1;
+  padding-right: 8px; /* Tạo khoảng cách cho scrollbar */
 }
 
+/* Tùy chỉnh scrollbar cho ranking-list */
+.ranking-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.ranking-list::-webkit-scrollbar-track {
+  background: var(--background-color);
+  border-radius: 3px;
+}
+
+.ranking-list::-webkit-scrollbar-thumb {
+  background: var(--hover-background);
+  border-radius: 3px;
+}
+
+.ranking-list::-webkit-scrollbar-thumb:hover {
+  background: var(--border-color);
+}
+
+/* Rankings */
 .ranking-item {
   display: flex;
   align-items: center;
   gap: 12px;
   padding: 8px;
-  background: var(--background-color);
+  background: var(--hover-background);
   border-radius: 8px;
   transition: transform 0.2s;
 }
@@ -208,32 +297,64 @@
 
 /* Responsive styles */
 @media (max-width: 1200px) {
-  .dashboard-content {
-    grid-template-columns: 1fr;
+  .dashboard {
+    --chart-height: 400px;
   }
   
-  .chart-wrapper {
-    min-height: 350px;
+  .dashboard-content {
+    grid-template-columns: 1fr;
+    height: auto;
+  }
+  
+  .chart-section {
+    height: var(--chart-height);
   }
   
   .rankings-section {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: var(--spacing-md);
+    grid-template-rows: none;
   }
 }
 
 @media (max-width: 768px) {
+  .dashboard {
+    --chart-height: 350px;
+  }
+
   .stats-grid {
     grid-template-columns: repeat(2, 1fr);
   }
 
   .rankings-section {
     grid-template-columns: 1fr;
+    height: auto;
+  }
+
+  .ranking-card {
+    height: var(--rankings-height);
   }
   
+  .chart-section {
+    height: var(--chart-height);
+  }
+
   .chart-wrapper {
-    min-height: 300px;
+    height: 200px;
+  }
+
+  .date-range-inputs {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .date-input-group {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .date-input-group label {
+    margin-bottom: var(--spacing-xs);
   }
 }
 

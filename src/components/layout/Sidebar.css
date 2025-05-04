@@ -2,7 +2,7 @@
   width: var(--sidebar-width);
   height: 100vh;
   background: var(--sidebar-background);
-  border-right: 1px solid var(--border-color);
+  border-right: 2px solid var(--border-color);
   position: fixed;
   left: 0;
   top: 0;
@@ -18,7 +18,7 @@
 
 .logo {
   padding: 12px 24px;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+  border-bottom: 2px solid rgba(0, 0, 0, 0.08);
 }
 
 .logo a {
@@ -41,7 +41,7 @@
 }
 
 .menu {
-  padding: var(--spacing-lg) var(--spacing-md);
+  padding: var(--spacing-sm) var(--spacing-md);
   flex: 1;
 }
 
@@ -76,8 +76,8 @@
 }
 
 .user-section {
-  padding: var(--spacing-lg);
-  border-top: 1px solid var(--border-color);
+  padding: var(--spacing-md);
+  border-top: 2px solid var(--border-color);
 }
 
 .user-info {
@@ -100,8 +100,8 @@
 .theme-switch-container {
   margin-bottom: 16px;
   padding: 8px 0;
-  border-top: 1px solid var(--border-color);
-  border-bottom: 1px solid var(--border-color);
+  border-top: 2px solid var(--border-color);
+  border-bottom: 2px solid var(--border-color);
 }
 
 .logout-button {
@@ -141,4 +141,65 @@
   .sidebar.open {
     transform: translateX(0);
   }
+}
+
+.menu-group {
+  position: relative;
+  margin-bottom: 8px;
+}
+
+.menu-group .menu-item {
+  cursor: pointer;
+  position: relative;
+}
+
+.menu-group .menu-item::after {
+  content: "▼";
+  position: absolute;
+  right: 12px;
+  font-size: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  opacity: 0.6;
+  transition: transform var(--transition-fast);
+}
+
+.menu-group:hover .menu-item::after {
+  transform: translateY(-50%) rotate(180deg);
+}
+
+.submenu {
+  max-height: 0;
+  overflow: hidden;
+  margin-left: 24px;
+  transition: max-height var(--transition-normal), opacity var(--transition-normal);
+  opacity: 0;
+}
+
+.menu-group:hover .submenu {
+  max-height: 200px;
+  opacity: 1;
+}
+
+.submenu-item {
+  display: block;
+  padding: 8px 12px;
+  border-radius: var(--border-radius-md);
+  margin-bottom: 4px;
+  font-size: var(--font-size-xs);
+  color: var(--text-color);
+  opacity: 0.7;
+  text-decoration: none;
+  transition: all var(--transition-fast);
+}
+
+.submenu-item:hover {
+  background-color: var(--hover-background);
+  opacity: 1;
+}
+
+.submenu-item.active {
+  background-color: var(--hover-background);
+  opacity: 1;
+  font-weight: var(--font-weight-medium);
 } 

@@ -6,8 +6,8 @@ const ReviewsView = () => {
     <div className="reviews-view">
       {/* <ReviewList /> */}
       <div className="p-8 text-center">
-        <h2 className="text-2xl font-bold mb-4">Quản lý đánh giá</h2>
-        <p className="text-gray-600">Tính năng đang được phát triển...</p>
+        <h2 className="text-2xl font-bold mb-4">Reviews Management</h2>
+        <p className="text-gray-600">This feature is under development...</p>
       </div>
     </div>
   );

@@ -126,6 +126,36 @@ class StoreService {
             currency: 'VND'
         }).format(amount);
     }
+
+    // Hàm lấy danh sách người dùng có vai trò Seller
+    async getSellersList() {
+        try {
+            // Tạo đối tượng SearchUserDto với tham số role=Seller
+            const searchParams = {
+                searchTerm: '',
+                pageIndex: 1,
+                pageSize: 100,
+                role: 'Seller'  // Chỉ định cụ thể role là Seller
+            };
+            
+            // Gọi API search-paged với tham số role=Seller
+            const response = await axios.get('/User/search-paged', { 
+                params: searchParams
+            });
+            
+            // Lọc để chỉ lấy những user có role là Seller
+            const sellersList = response.data.items.filter(user => 
+                user.role === 'Seller' && user.isActive
+            );
+            
+            console.log('Fetched sellers list:', sellersList);
+            return sellersList;
+        } catch (error) {
+            console.error('Error fetching sellers list:', error);
+            // Trả về mảng rỗng nếu lỗi
+            return [];
+        }
+    }
 }
 
 export default new StoreService(); 

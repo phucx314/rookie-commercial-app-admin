@@ -1,18 +1,17 @@
 import React from 'react';
 import { Outlet } from 'react-router-dom';
 import Sidebar from './Sidebar';
+import './Layout.css';
 
 const Layout = () => {
     return (
-        <div>
+        <div className="layout-container">
             <Sidebar />
-            <div className="md:pl-64 flex flex-col flex-1">
-                <main className="flex-1">
-                    <div className="py-6">
-                        <Outlet />
-                    </div>
-                </main>
-            </div>
+            <main className="main-content">
+                <div className="content-container">
+                    <Outlet />
+                </div>
+            </main>
         </div>
     );
 };

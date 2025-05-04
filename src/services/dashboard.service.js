@@ -1,6 +1,9 @@
 import axios from '../api/axios';
 
 class DashboardService {
+    // Thêm constants cho date range
+    MIN_DATE = new Date('2025-03-01');
+    
     async getDashboardData() {
         try {
             const [productsRes, ordersRes, storesRes, categoriesRes] = await Promise.all([
@@ -38,7 +41,7 @@ class DashboardService {
         };
     }
 
-    getTopStores(stores, orders, products, limit = 3) {
+    getTopStores(stores, orders, products, limit = 10) {
         return stores
             .map(store => ({
                 ...store,
@@ -58,7 +61,7 @@ class DashboardService {
             .slice(0, limit);
     }
 
-    getTopProducts(products, orders, limit = 3) {
+    getTopProducts(products, orders, limit = 10) {
         return products
             .map(product => ({
                 ...product,
@@ -71,7 +74,7 @@ class DashboardService {
             .slice(0, limit);
     }
 
-    getTopCategories(categories, orders, products, limit = 3) {
+    getTopCategories(categories, orders, products, limit = 10) {
         return categories
             .map(category => ({
                 ...category,
@@ -86,9 +89,13 @@ class DashboardService {
             .slice(0, limit);
     }
 
-    getOrdersByDate(orders, days = 7) {
-        // Tạo một mảng ngày trong khoảng thời gian
-        const dates = this.generateDateRange(days);
+    getOrdersByDateRange(orders, startDate, endDate) {
+        // Đảm bảo startDate và endDate là đối tượng Date
+        const start = new Date(startDate);
+        const end = new Date(endDate);
+        
+        // Tạo mảng các ngày trong khoảng
+        const dates = this.generateDateRange(start, end);
         
         // Nhóm đơn hàng theo ngày
         const ordersByDate = dates.map(date => {
@@ -107,9 +114,13 @@ class DashboardService {
         return ordersByDate;
     }
 
-    getRevenueByDate(orders, days = 7) {
-        // Tạo một mảng ngày trong khoảng thời gian
-        const dates = this.generateDateRange(days);
+    getRevenueByDateRange(orders, startDate, endDate) {
+        // Đảm bảo startDate và endDate là đối tượng Date
+        const start = new Date(startDate);
+        const end = new Date(endDate);
+        
+        // Tạo mảng các ngày trong khoảng
+        const dates = this.generateDateRange(start, end);
         
         // Tính doanh thu theo ngày
         const revenueByDate = dates.map(date => {
@@ -136,22 +147,43 @@ class DashboardService {
         return revenueByDate;
     }
 
-    generateDateRange(days) {
+    generateDateRange(startDate, endDate) {
         const dates = [];
-        const today = new Date();
+        let currentDate = new Date(startDate);
         
-        for (let i = days - 1; i >= 0; i--) {
-            const date = new Date();
-            date.setDate(today.getDate() - i);
-            date.setHours(0, 0, 0, 0);
-            dates.push(date);
+        while (currentDate <= endDate) {
+            dates.push(new Date(currentDate));
+            currentDate.setDate(currentDate.getDate() + 1);
         }
         
         return dates;
     }
 
+    validateDateRange(startDate, endDate) {
+        const start = new Date(startDate);
+        const end = new Date(endDate);
+        const today = new Date();
+        
+        // Kiểm tra startDate không được trước MIN_DATE
+        if (start < this.MIN_DATE) {
+            throw new Error('Start date cannot be before April 1st, 2025');
+        }
+        
+        // Kiểm tra endDate không được sau today
+        if (end > today) {
+            throw new Error('End date cannot be after today');
+        }
+        
+        // Kiểm tra startDate phải trước hoặc bằng endDate
+        if (start > end) {
+            throw new Error('Start date must be before or equal to end date');
+        }
+        
+        return true;
+    }
+
     formatCurrency(value) {
-        return new Intl.NumberFormat("vi-VN", {
+        return new Intl.NumberFormat("en-US", {
             style: "currency",
             currency: "VND",
         }).format(value);
@@ -182,7 +214,7 @@ class DashboardService {
             datasets: [
                 {
                     type: 'bar',
-                    label: 'Số lượng đơn hàng',
+                    label: 'Number of Orders',
                     data: ordersByDate.map(item => item.count),
                     backgroundColor: colors.barBackgroundColor,
                     borderColor: colors.barBorderColor,
@@ -191,7 +223,7 @@ class DashboardService {
                 },
                 {
                     type: 'line',
-                    label: 'Doanh thu (VNĐ)',
+                    label: 'Revenue (VND)',
                     data: revenueByDate.map(item => item.revenue),
                     backgroundColor: colors.lineBackgroundColor,
                     borderColor: colors.lineBorderColor,
@@ -256,7 +288,7 @@ class DashboardService {
                     },
                     title: {
                         display: true,
-                        text: 'Số đơn hàng',
+                        text: 'Number of Orders',
                         color: colors.textColor
                     },
                     beginAtZero: true
@@ -279,7 +311,7 @@ class DashboardService {
                     },
                     title: {
                         display: true,
-                        text: 'Doanh thu (VNĐ)',
+                        text: 'Revenue (VND)',
                         color: colors.textColor
                     },
                     beginAtZero: true

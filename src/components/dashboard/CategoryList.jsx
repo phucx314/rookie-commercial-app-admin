@@ -16,7 +16,7 @@ const CategoryList = () => {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [sortConfig, setSortConfig] = useState({ 
-    key: searchParams.get('sortBy') || null, 
+    key: searchParams.get('sortBy') || 'name', 
     direction: searchParams.get('sortDir') || 'asc' 
   });
   const [newCategory, setNewCategory] = useState({
@@ -561,32 +561,34 @@ const CategoryList = () => {
         <div className="modal">
           <div className="modal-content">
             <h2>Add New Category</h2>
-            <input
-              type="text"
-              placeholder="Category Name"
-              value={newCategory.name}
-              onChange={(e) => setNewCategory({ ...newCategory, name: e.target.value })}
-              id="new-category-name"
-              name="new-category-name"
-            />
-            <textarea
-              placeholder="Description"
-              value={newCategory.description}
-              onChange={(e) => setNewCategory({ ...newCategory, description: e.target.value })}
-              id="new-category-description"
-              name="new-category-description"
-            />
-            <select
-              value={newCategory.parentId}
-              onChange={(e) => setNewCategory({ ...newCategory, parentId: e.target.value })}
-              id="new-category-parent"
-              name="new-category-parent"
-            >
-              <option value="">No Parent Category</option>
-              {allCategories.map(category => (
-                <option key={category.id} value={category.id}>{category.name}</option>
-              ))}
-            </select>
+            <div className="modal-form-content">
+              <input
+                type="text"
+                placeholder="Category Name"
+                value={newCategory.name}
+                onChange={(e) => setNewCategory({ ...newCategory, name: e.target.value })}
+                id="new-category-name"
+                name="new-category-name"
+              />
+              <textarea
+                placeholder="Description"
+                value={newCategory.description}
+                onChange={(e) => setNewCategory({ ...newCategory, description: e.target.value })}
+                id="new-category-description"
+                name="new-category-description"
+              />
+              <select
+                value={newCategory.parentId}
+                onChange={(e) => setNewCategory({ ...newCategory, parentId: e.target.value })}
+                id="new-category-parent"
+                name="new-category-parent"
+              >
+                <option value="">No Parent Category</option>
+                {allCategories.map(category => (
+                  <option key={category.id} value={category.id}>{category.name}</option>
+                ))}
+              </select>
+            </div>
             <div className="modal-actions">
               <button onClick={() => setIsModalOpen(false)}>Cancel</button>
               <button onClick={handleCreateCategory}>Create</button>
@@ -600,34 +602,36 @@ const CategoryList = () => {
         <div className="modal">
           <div className="modal-content">
             <h2>Edit Category</h2>
-            <input
-              type="text"
-              placeholder="Category Name"
-              value={selectedCategory.name}
-              onChange={(e) => setSelectedCategory({ ...selectedCategory, name: e.target.value })}
-              id="edit-category-name"
-              name="edit-category-name"
-            />
-            <textarea
-              placeholder="Description"
-              value={selectedCategory.description}
-              onChange={(e) => setSelectedCategory({ ...selectedCategory, description: e.target.value })}
-              id="edit-category-description"
-              name="edit-category-description"
-            />
-            <select
-              value={selectedCategory.parentId || ''}
-              onChange={(e) => setSelectedCategory({ ...selectedCategory, parentId: e.target.value })}
-              id="edit-category-parent"
-              name="edit-category-parent"
-            >
-              <option value="">No Parent Category</option>
-              {allCategories
-                .filter(category => category.id !== selectedCategory.id)
-                .map(category => (
-                  <option key={category.id} value={category.id}>{category.name}</option>
-                ))}
-            </select>
+            <div className="modal-form-content">
+              <input
+                type="text"
+                placeholder="Category Name"
+                value={selectedCategory.name}
+                onChange={(e) => setSelectedCategory({ ...selectedCategory, name: e.target.value })}
+                id="edit-category-name"
+                name="edit-category-name"
+              />
+              <textarea
+                placeholder="Description"
+                value={selectedCategory.description}
+                onChange={(e) => setSelectedCategory({ ...selectedCategory, description: e.target.value })}
+                id="edit-category-description"
+                name="edit-category-description"
+              />
+              <select
+                value={selectedCategory.parentId || ''}
+                onChange={(e) => setSelectedCategory({ ...selectedCategory, parentId: e.target.value })}
+                id="edit-category-parent"
+                name="edit-category-parent"
+              >
+                <option value="">No Parent Category</option>
+                {allCategories
+                  .filter(category => category.id !== selectedCategory.id)
+                  .map(category => (
+                    <option key={category.id} value={category.id}>{category.name}</option>
+                  ))}
+              </select>
+            </div>
             <div className="modal-actions">
               <button onClick={() => setIsEditModalOpen(false)}>Cancel</button>
               <button onClick={() => handleUpdateCategory(selectedCategory.id, selectedCategory)}>Save</button>
