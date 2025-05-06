@@ -10,7 +10,7 @@ import { toastService } from '../../services/toast.service';
 const CreateInStoreOrder = () => {
   const navigate = useNavigate();
   const [formValues, setFormValues] = useState({
-    shippingAddress: '',
+    shippingAddress: 'At store',
     status: 'Delivered',
     paymentStatus: 'Paid',
     paymentMethod: 'CashOnDelivery',
@@ -144,6 +144,11 @@ const CreateInStoreOrder = () => {
     setSelectedStore(store);
     // Load products for the selected store
     loadProductsByStore(store.id);
+    // Cập nhật shipping address với thông tin store sử dụng service
+    setFormValues({
+      ...formValues,
+      shippingAddress: storeService.createDefaultShippingAddress(store)
+    });
     // Move to products tab
     setActiveTab('3');
   };

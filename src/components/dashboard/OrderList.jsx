@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams, useLocation, useNavigate } from 'react-router-dom';
-import { PlusIcon, PencilIcon, TrashIcon, ChevronUpIcon, ChevronDownIcon, MagnifyingGlassIcon, PrinterIcon } from '@heroicons/react/24/outline';
+import { PlusIcon, PencilIcon, TrashIcon, ChevronUpIcon, ChevronDownIcon, MagnifyingGlassIcon, PrinterIcon, FunnelIcon, XMarkIcon } from '@heroicons/react/24/outline';
 import orderService from '../../services/order.service';
 import productService from '../../services/product.service';
 import storeService from '../../services/store.service';
@@ -28,23 +28,37 @@ const OrderList = () => {
     totalPages: 0
   });
   const [searchTerm, setSearchTerm] = useState(searchParams.get('search') || '');
+  // Date range filter
+  const [dateRange, setDateRange] = useState({
+    fromDate: searchParams.get('fromDate') || '',
+    toDate: searchParams.get('toDate') || ''
+  });
   const [allOrders, setAllOrders] = useState([]);
   const [shouldApplySearch, setShouldApplySearch] = useState(!!searchParams.get('search'));
+  const [shouldApplyDateFilter, setShouldApplyDateFilter] = useState(
+    !!(searchParams.get('fromDate') && searchParams.get('toDate'))
+  );
 
   // Update URL when filters change
   useEffect(() => {
-    const params = new URLSearchParams();
+    const params = new URLSearchParams(searchParams);
     
     if (pagination.pageIndex !== 1) {
       params.set('page', pagination.pageIndex);
+    } else {
+      params.delete('page');
     }
     
     if (pagination.pageSize !== 10) {
       params.set('pageSize', pagination.pageSize);
+    } else {
+      params.delete('pageSize');
     }
     
     if (searchTerm) {
       params.set('search', searchTerm);
+    } else {
+      params.delete('search');
     }
     
     if (sortConfig.key) {
@@ -52,8 +66,20 @@ const OrderList = () => {
       params.set('sortDir', sortConfig.direction);
     }
     
+    if (dateRange.fromDate) {
+      params.set('fromDate', dateRange.fromDate);
+    } else {
+      params.delete('fromDate');
+    }
+    
+    if (dateRange.toDate) {
+      params.set('toDate', dateRange.toDate);
+    } else {
+      params.delete('toDate');
+    }
+    
     setSearchParams(params);
-  }, [pagination.pageIndex, pagination.pageSize, searchTerm, shouldApplySearch, sortConfig, setSearchParams]);
+  }, [pagination.pageIndex, pagination.pageSize, searchTerm, dateRange.fromDate, dateRange.toDate, sortConfig]);
 
   useEffect(() => {
     fetchAllOrders();
@@ -68,16 +94,28 @@ const OrderList = () => {
   // Separate useEffect to handle search
   useEffect(() => {
     if (shouldApplySearch && allOrders.length > 0) {
-      filterAndPaginateOrders(allOrders, true);
+      filterAndPaginateOrders(allOrders, true, false);
     }
   }, [shouldApplySearch]);
+
+  // Separate useEffect to handle date filter
+  useEffect(() => {
+    if (shouldApplyDateFilter && allOrders.length > 0) {
+      filterAndPaginateOrders(allOrders, false, true);
+    }
+  }, [shouldApplyDateFilter]);
 
   const fetchAllOrders = async () => {
     try {
       setLoading(true);
       const data = await orderService.getAllOrders();
       setAllOrders(data);
-      filterAndPaginateOrders(data);
+      
+      // Áp dụng cả hai bộ lọc nếu cần
+      const applyDateFilter = !!(dateRange.fromDate && dateRange.toDate);
+      const applySearchFilter = !!searchTerm;
+      
+      filterAndPaginateOrders(data, applySearchFilter, applyDateFilter);
     } catch (error) {
       console.error('Error fetching orders:', error);
       toastService.error('Cannot load orders. Please try again later.');
@@ -86,13 +124,22 @@ const OrderList = () => {
     }
   };
 
-  const filterAndPaginateOrders = (ordersData = allOrders, isSearchRequest = false) => {
-    let filtered = ordersData;
+  const filterAndPaginateOrders = (ordersData = allOrders, isSearchRequest = false, isDateFilterRequest = false) => {
+    let filtered = [...ordersData]; // Tạo bản sao để tránh thay đổi dữ liệu gốc
+    
+    console.log("Filtering orders:", { 
+      searchTerm, 
+      dateRange, 
+      shouldApplySearch, 
+      shouldApplyDateFilter,
+      isSearchRequest,
+      isDateFilterRequest 
+    });
     
     // Apply search filter if search term exists
     if ((shouldApplySearch || isSearchRequest) && searchTerm) {
       const lowercaseSearchTerm = searchTerm.toLowerCase();
-      filtered = ordersData.filter(order => 
+      filtered = filtered.filter(order => 
         order.customer?.fullName?.toLowerCase().includes(lowercaseSearchTerm) ||
         order.customer?.email?.toLowerCase().includes(lowercaseSearchTerm) ||
         order.shippingAddress?.toLowerCase().includes(lowercaseSearchTerm)
@@ -104,6 +151,31 @@ const OrderList = () => {
         }, 10);
       }
     }
+    
+    // Apply date range filter
+    if ((shouldApplyDateFilter || isDateFilterRequest) && dateRange.fromDate && dateRange.toDate) {
+      const fromDate = new Date(dateRange.fromDate);
+      fromDate.setHours(0, 0, 0, 0); // Bắt đầu từ 00:00:00 của ngày fromDate
+      
+      const toDate = new Date(dateRange.toDate);
+      toDate.setHours(23, 59, 59, 999); // Kết thúc ở 23:59:59.999 của ngày toDate
+      
+      console.log("Date filtering from", fromDate, "to", toDate);
+      
+      filtered = filtered.filter(order => {
+        const orderDate = new Date(order.createdAt);
+        return orderDate >= fromDate && orderDate <= toDate;
+      });
+      
+      if (isDateFilterRequest) {
+        setTimeout(() => {
+          setShouldApplyDateFilter(false);
+        }, 10);
+      }
+    }
+    
+    // Log kết quả filter
+    console.log(`Filtered orders: ${filtered.length} of ${ordersData.length}`);
     
     // Apply sorting
     filtered = [...filtered].sort((a, b) => {
@@ -159,6 +231,36 @@ const OrderList = () => {
       pageIndex: 1
     });
     setShouldApplySearch(true);
+  };
+
+  const handleDateRangeChange = (e) => {
+    const { name, value } = e.target;
+    setDateRange(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const handleDateRangeSubmit = (e) => {
+    e.preventDefault();
+    console.log("Applying date filter:", dateRange);
+    setPagination({
+      ...pagination,
+      pageIndex: 1
+    });
+    setShouldApplyDateFilter(true);
+  };
+
+  const clearDateFilter = () => {
+    setDateRange({
+      fromDate: '',
+      toDate: ''
+    });
+    setPagination({
+      ...pagination,
+      pageIndex: 1
+    });
+    setShouldApplyDateFilter(true);
   };
 
   const handleSort = (key) => {
@@ -367,6 +469,48 @@ const OrderList = () => {
         </div>
       </div>
 
+      {/* Date Range Filter */}
+      <div className="date-filter-container">
+        <form onSubmit={handleDateRangeSubmit} className="date-range-form">
+          <div className="date-range-inputs">
+            <div className="date-input-group">
+              <label>From:</label>
+              <input
+                type="date"
+                name="fromDate"
+                value={dateRange.fromDate}
+                onChange={handleDateRangeChange}
+                className="date-input"
+              />
+            </div>
+            <div className="date-input-group">
+              <label>To:</label>
+              <input
+                type="date"
+                name="toDate"
+                value={dateRange.toDate}
+                onChange={handleDateRangeChange}
+                className="date-input"
+              />
+            </div>
+            <div className="filter-btn-container">
+              <button type="submit" className="filter-btn">
+                <FunnelIcon className="filter-icon" />
+                Apply Filter
+              </button>
+            </div>
+            {(dateRange.fromDate || dateRange.toDate) && (
+              <div className="clear-filter-btn-container">
+                <button type="button" className="clear-filter-btn" onClick={clearDateFilter}>
+                  <XMarkIcon className="clear-icon" />
+                  Clear Filter
+                </button>
+              </div>
+            )}
+          </div>
+        </form>
+      </div>
+
       <div className="orders-table-container">
         <table className="orders-table">
           <thead>
@@ -396,65 +540,75 @@ const OrderList = () => {
             </tr>
           </thead>
           <tbody>
-            {orders.map(order => (
-              <tr key={order.id}>
-                <td>{order.id}</td>
-                <td>
-                  {order.customer ? (
-                    <div className="customer-info">
-                      <span className="customer-name">{order.customer.fullName}</span>
-                      <span className="customer-email">{order.customer.email}</span>
-                    </div>
-                  ) : (
-                    'Guest'
-                  )}
-                </td>
-                <td className="amount-column">
-                  {productService.formatPrice(order.totalAmount)}
-                </td>
-                <td>
-                  <span className={getStatusBadgeClass(order.status)}>
-                    {getStatusText(order.status)}
-                  </span>
-                </td>
-                <td>
-                  <span className={getPaymentStatusBadgeClass(order.paymentStatus)}>
-                    {getPaymentStatusText(order.paymentStatus)}
-                  </span>
-                </td>
-                <td>{getPaymentMethodText(order.paymentMethod)}</td>
-                <td className="date-column">
-                  {new Date(order.createdAt).toLocaleString()}
-                </td>
-                <td>
-                  <div className="order-actions">
-                    <button 
-                      className="view-btn"
-                      onClick={() => navigate(`/orders/${order.id}`)}
-                      title="View Details"
-                    >
-                      View
-                    </button>
-                    <button 
-                      className="edit-btn"
-                      onClick={() => navigate(`/orders/edit/${order.id}`)}
-                      title="Edit"
-                    >
-                      <PencilIcon />
-                    </button>
-                    {order.status === 3 && order.paymentStatus === 1 && (
-                      <button 
-                        className="print-btn"
-                        onClick={() => handlePrintBill(order)}
-                        title="Print Bill"
-                      >
-                        <PrinterIcon />
-                      </button>
+            {orders.length > 0 ? (
+              orders.map(order => (
+                <tr key={order.id}>
+                  <td>{order.id}</td>
+                  <td>
+                    {order.customer ? (
+                      <div className="customer-info">
+                        <span className="customer-name">{order.customer.fullName}</span>
+                        <span className="customer-email">{order.customer.email}</span>
+                      </div>
+                    ) : (
+                      'Guest'
                     )}
-                  </div>
+                  </td>
+                  <td className="amount-column">
+                    {productService.formatPrice(order.totalAmount)}
+                  </td>
+                  <td>
+                    <span className={getStatusBadgeClass(order.status)}>
+                      {getStatusText(order.status)}
+                    </span>
+                  </td>
+                  <td>
+                    <span className={getPaymentStatusBadgeClass(order.paymentStatus)}>
+                      {getPaymentStatusText(order.paymentStatus)}
+                    </span>
+                  </td>
+                  <td>{getPaymentMethodText(order.paymentMethod)}</td>
+                  <td className="date-column">
+                    {new Date(order.createdAt).toLocaleString()}
+                  </td>
+                  <td>
+                    <div className="order-actions">
+                      <button 
+                        className="view-btn"
+                        onClick={() => navigate(`/orders/${order.id}`)}
+                        title="View Details"
+                      >
+                        View
+                      </button>
+                      <button 
+                        className="edit-btn"
+                        onClick={() => navigate(`/orders/edit/${order.id}`)}
+                        title="Edit"
+                      >
+                        <PencilIcon />
+                      </button>
+                      {order.status === 3 && order.paymentStatus === 1 && (
+                        <button 
+                          className="print-btn"
+                          onClick={() => handlePrintBill(order)}
+                          title="Print Bill"
+                        >
+                          <PrinterIcon />
+                        </button>
+                      )}
+                    </div>
+                  </td>
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td colSpan="8" className="no-orders-message">
+                  {searchTerm || (dateRange.fromDate && dateRange.toDate) 
+                    ? "No orders found matching your filters." 
+                    : "No orders found."}
                 </td>
               </tr>
-            ))}
+            )}
           </tbody>
         </table>
       </div>

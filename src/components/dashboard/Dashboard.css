@@ -196,6 +196,39 @@
   margin-top: var(--spacing-md);
 }
 
+/* Chart footer for the view orders button */
+.chart-footer {
+  display: flex;
+  justify-content: center;
+  margin-top: var(--spacing-md);
+  padding-top: var(--spacing-sm);
+  border-top: 1px solid var(--border-color);
+}
+
+.view-orders-btn {
+  background-color: var(--text-color);
+  color: var(--background-color);
+  border: none;
+  border-radius: var(--border-radius-md);
+  padding: var(--spacing-sm) var(--spacing-lg);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.view-orders-btn:hover {
+  opacity: 0.9;
+  transform: translateY(-2px);
+}
+
+.view-orders-btn:active {
+  transform: translateY(0);
+}
+
 /* Rankings Section */
 .rankings-section {
   display: grid;

@@ -319,6 +319,31 @@ class DashboardService {
             },
         };
     }
+
+    // Phương thức mới để chuẩn bị tham số URL cho trang Orders
+    prepareOrdersFilterParams(dateRange) {
+        // Kiểm tra xem dateRange có hợp lệ không
+        if (!dateRange || !dateRange.startDate || !dateRange.endDate) {
+            return '';
+        }
+
+        try {
+            // Xác thực range
+            this.validateDateRange(dateRange.startDate, dateRange.endDate);
+            
+            // Tạo chuỗi tham số
+            const params = new URLSearchParams();
+            params.set('fromDate', dateRange.startDate);
+            params.set('toDate', dateRange.endDate);
+            params.set('sortBy', 'createdAt');
+            params.set('sortDir', 'desc');
+            
+            return params.toString();
+        } catch (error) {
+            console.error('Error preparing orders filter params:', error);
+            return '';
+        }
+    }
 }
 
 export default new DashboardService(); 

@@ -787,4 +787,11 @@
   font-size: var(--font-size-xs);
   color: var(--text-color);
   opacity: 0.7;
+}
+
+/* Style cho shipping address mặc định */
+input[name="shippingAddress"][value="At store"] {
+  font-style: italic;
+  color: var(--text-color);
+  background-color: var(--hover-background);
 } 

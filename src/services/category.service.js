@@ -10,11 +10,20 @@ class CategoryService {
         }
     }
 
-    async getPaginatedCategories(pageIndex = 1, pageSize = 10) {
+    async getPaginatedCategories(pageIndex = 1, pageSize = 10, sortBy = null, sortDirection = 'asc') {
         try {
-            const response = await axios.get('/Category/paged', {
-                params: { pageIndex, pageSize }
-            });
+            const params = { 
+                pageIndex, 
+                pageSize
+            };
+            
+            // Thêm các tham số sắp xếp nếu được cung cấp
+            if (sortBy) {
+                params.sortBy = sortBy;
+                params.sortDirection = sortDirection;
+            }
+            
+            const response = await axios.get('/Category/paged', { params });
             return response.data;
         } catch (error) {
             throw error;
@@ -76,6 +85,9 @@ class CategoryService {
     }
 
     getSortedCategories(categories, sortConfig) {
+        // LƯU Ý: Phương thức này chỉ nên được sử dụng cho sắp xếp client-side khi 
+        // không thể sử dụng các API sorting server-side. Ưu tiên sử dụng API sorting
+        // để có hiệu suất tốt hơn khi làm việc với lượng data lớn.
         if (!sortConfig.key) return categories;
 
         return [...categories].sort((a, b) => {
@@ -125,6 +137,25 @@ class CategoryService {
         }
         
         return categoryToUpdate;
+    }
+
+    async getSortOptions() {
+        try {
+            const response = await axios.get('/Category/sort-options');
+            return response.data;
+        } catch (error) {
+            console.error('Error fetching sort options:', error);
+            // Trả về danh sách mặc định nếu API lỗi
+            return [
+                { field: 'name', displayName: 'Name' },
+                { field: 'description', displayName: 'Description' },
+                { field: 'parent', displayName: 'Parent Category' },
+                { field: 'childrencount', displayName: 'Subcategories Count' },
+                { field: 'productscount', displayName: 'Products Count' },
+                { field: 'createdat', displayName: 'Created Date' },
+                { field: 'updatedat', displayName: 'Updated Date' }
+            ];
+        }
     }
 }
 

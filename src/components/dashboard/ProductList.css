@@ -680,4 +680,41 @@
   width: 22px !important;
   height: 22px !important;
   color: var(--text-color) !important;
+}
+
+/* Style cho thông báo trạng thái sắp xếp */
+.sort-status {
+  margin-bottom: var(--spacing-md);
+  padding: var(--spacing-sm) var(--spacing-md);
+  background-color: var(--hover-background);
+  border-radius: var(--border-radius-md);
+  font-size: var(--font-size-sm);
+  color: var(--text-color);
+  display: flex;
+  align-items: center;
+}
+
+.sort-status p {
+  margin: 0;
+}
+
+.sort-status strong {
+  font-weight: var(--font-weight-medium);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .store-info-details {
+    flex-direction: column;
+    gap: var(--spacing-xs);
+  }
+  
+  .store-info-item {
+    min-width: auto;
+  }
+  
+  .store-table th:nth-child(3),
+  .store-table td:nth-child(3) {
+    display: none;
+  }
 } 

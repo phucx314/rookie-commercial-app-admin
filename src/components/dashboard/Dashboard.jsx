@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   CurrencyDollarIcon,
   ShoppingBagIcon,
@@ -35,6 +36,7 @@ ChartJS.register(
 );
 
 const Dashboard = () => {
+  const navigate = useNavigate();
   const [dashboardData, setDashboardData] = useState({
     products: [],
     orders: [],
@@ -211,6 +213,19 @@ const Dashboard = () => {
             </div>
             <div className="chart-wrapper">
               <Line data={combinedChartData} options={combinedChartOptions} />
+            </div>
+            <div className="chart-footer">
+              <button 
+                className="view-orders-btn" 
+                onClick={() => {
+                  // Chuẩn bị tham số lọc theo khoảng thời gian đã chọn
+                  const filterParams = dashboardService.prepareOrdersFilterParams(dateRange);
+                  // Điều hướng đến trang orders với params
+                  navigate(`/orders${filterParams ? '?' + filterParams : ''}`);
+                }}
+              >
+                Xem chi tiết đơn hàng
+              </button>
             </div>
           </div>
         </div>

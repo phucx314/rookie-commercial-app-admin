@@ -96,7 +96,7 @@ const ProductList = () => {
     
     useEffect(() => {
         fetchProducts();
-    }, [pagination.pageIndex, pagination.pageSize, selectedCategoryId, selectedStoreId]);
+    }, [pagination.pageIndex, pagination.pageSize, selectedCategoryId, selectedStoreId, sortConfig.key, sortConfig.direction]);
 
     // Separate useEffect to handle search
     useEffect(() => {
@@ -181,7 +181,9 @@ const ProductList = () => {
                 response = await productService.searchProducts(
                     searchTerm,
                     pagination.pageIndex,
-                    pagination.pageSize
+                    pagination.pageSize,
+                    sortConfig.key,
+                    sortConfig.direction
                 );
                 
                 // Only reset the flag if this was called from the search useEffect
@@ -199,7 +201,9 @@ const ProductList = () => {
                 const categoryResponse = await productService.getPaginatedProductsByCategory(
                     selectedCategoryId,
                     1, // Luôn bắt đầu từ trang 1 để đảm bảo lấy tất cả
-                    1000 // Lấy số lượng lớn để đảm bảo lấy được tất cả (giả định không quá 1000 sản phẩm)
+                    1000, // Lấy số lượng lớn để đảm bảo lấy được tất cả (giả định không quá 1000 sản phẩm)
+                    sortConfig.key,
+                    sortConfig.direction
                 );
                 
                 // Lọc thủ công theo store
@@ -235,7 +239,9 @@ const ProductList = () => {
                 response = await productService.getPaginatedProductsByCategory(
                     selectedCategoryId,
                     pagination.pageIndex,
-                    pagination.pageSize
+                    pagination.pageSize,
+                    sortConfig.key,
+                    sortConfig.direction
                 );
             } else if (selectedStoreId !== 'all') {
                 // Chỉ lọc theo cửa hàng
@@ -244,7 +250,9 @@ const ProductList = () => {
                 // Lấy tất cả sản phẩm rồi lọc thủ công
                 const allProductsResponse = await productService.getPaginatedProducts(
                     1, // Luôn bắt đầu từ trang 1 để đảm bảo lấy tất cả
-                    1000 // Lấy số lượng lớn để đảm bảo lấy được tất cả (giả định không quá 1000 sản phẩm)
+                    1000, // Lấy số lượng lớn để đảm bảo lấy được tất cả (giả định không quá 1000 sản phẩm)
+                    sortConfig.key,
+                    sortConfig.direction
                 );
                 
                 if (allProductsResponse && allProductsResponse.items) {
@@ -277,7 +285,9 @@ const ProductList = () => {
                 console.log('Fetching all paginated products');
                 response = await productService.getPaginatedProducts(
                     pagination.pageIndex,
-                    pagination.pageSize
+                    pagination.pageSize,
+                    sortConfig.key,
+                    sortConfig.direction
                 );
             }
             
@@ -345,13 +355,17 @@ const ProductList = () => {
             if (!term.trim()) {
                 response = await productService.getPaginatedProducts(
                     1, // always start at page 1 for new search
-                    pagination.pageSize
+                    pagination.pageSize,
+                    sortConfig.key,
+                    sortConfig.direction
                 );
             } else {
                 response = await productService.searchProducts(
                     term,
                     1, // always start at page 1 for new search
-                    pagination.pageSize
+                    pagination.pageSize,
+                    sortConfig.key,
+                    sortConfig.direction
                 );
             }
             
@@ -588,12 +602,34 @@ const ProductList = () => {
         );
     };
 
+    // Function to get display name for sort fields
+    const getSortFieldDisplayName = (key) => {
+        switch(key) {
+            case 'name': return 'Product Name';
+            case 'category': return 'Category';
+            case 'store': return 'Store';
+            case 'description': return 'Description';
+            case 'price': return 'Price';
+            case 'stockquantity': return 'Stock Quantity';
+            case 'rating': return 'Average Rating';
+            case 'reviewscount': return 'Reviews Count';
+            case 'createdat': return 'Created Date';
+            case 'updatedat': return 'Updated Date';
+            default: return key;
+        }
+    };
+
     const handleSort = (key) => {
         let direction = 'asc';
         if (sortConfig.key === key && sortConfig.direction === 'asc') {
             direction = 'desc';
         }
+        
+        // Note: sorting is handled on the server, so we need to fetch data when sort changes
+        console.log(`Sorting by ${key} ${direction} - sending request to server`);
+        
         setSortConfig({ key, direction });
+        // fetchProducts will be called automatically through useEffect
     };
 
     const renderSortIcon = (key) => {
@@ -714,6 +750,13 @@ const ProductList = () => {
                 </div>
             </div>
             
+            {/* Show current sorting status */}
+            {sortConfig.key && (
+                <div className="sort-status">
+                    <p>Sorting by <strong>{getSortFieldDisplayName(sortConfig.key)}</strong> ({sortConfig.direction === 'asc' ? 'ascending' : 'descending'}) - Processing on server</p>
+                </div>
+            )}
+            
             <div className="products-table-container">
                 <table className="products-table">
                     <thead>
@@ -732,11 +775,11 @@ const ProductList = () => {
                             <th onClick={() => handleSort('name')} className="sortable">
                                 Product Name {renderSortIcon('name')}
                             </th>
-                            <th onClick={() => handleSort('categoryId')} className="sortable">
-                                Category {renderSortIcon('categoryId')}
+                            <th onClick={() => handleSort('category')} className="sortable">
+                                Category {renderSortIcon('category')}
                             </th>
-                            <th onClick={() => handleSort('storeId')} className="sortable">
-                                Store {renderSortIcon('storeId')}
+                            <th onClick={() => handleSort('store')} className="sortable">
+                                Store {renderSortIcon('store')}
                             </th>
                             <th onClick={() => handleSort('description')} className="sortable">
                                 Description {renderSortIcon('description')}
@@ -744,23 +787,23 @@ const ProductList = () => {
                             <th onClick={() => handleSort('price')} className="sortable">
                                 Price {renderSortIcon('price')}
                             </th>
-                            <th onClick={() => handleSort('stockQuantity')} className="sortable">
-                                Stock Quantity {renderSortIcon('stockQuantity')}
+                            <th onClick={() => handleSort('stockquantity')} className="sortable">
+                                Stock Quantity {renderSortIcon('stockquantity')}
                             </th>
                             <th onClick={() => handleSort('rating')} className="sortable">
                                 Rating {renderSortIcon('rating')}
                             </th>
-                            <th onClick={() => handleSort('createdAt')} className="sortable">
-                                Created {renderSortIcon('createdAt')}
+                            <th onClick={() => handleSort('createdat')} className="sortable">
+                                Created {renderSortIcon('createdat')}
                             </th>
-                            <th onClick={() => handleSort('updatedAt')} className="sortable">
-                                Updated {renderSortIcon('updatedAt')}
+                            <th onClick={() => handleSort('updatedat')} className="sortable">
+                                Updated {renderSortIcon('updatedat')}
                             </th>
                             <th>Action</th>
                         </tr>
                     </thead>
                     <tbody>
-                        {productService.getSortedProducts(products, categories, stores, sortConfig).map(product => (
+                        {products.map(product => (
                             <tr 
                                 key={product.id} 
                                 className={`${selectedItems.has(product.id) ? 'selected-row' : ''} ${!selectMode ? 'clickable-row' : ''}`}
