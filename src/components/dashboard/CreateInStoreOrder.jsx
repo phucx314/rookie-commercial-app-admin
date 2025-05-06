@@ -57,7 +57,7 @@ const CreateInStoreOrder = () => {
   useEffect(() => {
     // Original effect for loading customers, now keep it empty
   }, []);
-  
+
   useEffect(() => {
     // Calculate total when selected products change
     calculateTotal();
@@ -402,7 +402,7 @@ const CreateInStoreOrder = () => {
         // navigate('/orders');
       } else {
         setTimeout(() => {
-          navigate('/orders');
+      navigate('/orders');
         }, 3000); // Chờ 3 giây để người dùng xem thông báo thành công
       }
     } catch (error) {
@@ -867,64 +867,64 @@ const CreateInStoreOrder = () => {
                 {loadingProducts ? (
                   <div className="loading">Loading products...</div>
                 ) : (
-                  <div className="create-order-product-list">
+                <div className="create-order-product-list">
                     {products.length > 0 ? (
-                      <table className="product-table">
-                        <thead>
-                          <tr>
-                            <th>Image</th>
-                            <th>Name</th>
-                            <th>SKU</th>
-                            <th>Category</th>
-                            <th>Price</th>
-                            <th>Stock</th>
-                            <th>Quantity</th>
-                            <th>Action</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {products.map((product) => (
-                            <tr key={product.id}>
-                              <td>
-                                {product.imageUrl ? (
-                                  <img src={product.imageUrl} alt={product.name} style={{ width: 48, height: 48, objectFit: 'cover', borderRadius: 4 }} />
-                                ) : (
-                                  <div style={{ width: 48, height: 48, background: '#eee', borderRadius: 4 }} />
-                                )}
-                              </td>
-                              <td>{product.name}</td>
-                              <td>{product.sku || 'N/A'}</td>
-                              <td>{product.category?.name || product.categoryName || (() => {console.log('No category for product:', product); return 'N/A';})()}</td>
-                              <td>{productService.formatPrice(product.price)}</td>
-                              <td>{product.stockQuantity}</td>
-                              <td>
-                                <input
-                                  type="number"
-                                  className="create-order-quantity-input"
-                                  value={productQuantities[product.id] || 1}
-                                  min={1}
-                                  max={product.stockQuantity}
-                                  onChange={e => setProductQuantities({ ...productQuantities, [product.id]: e.target.value })}
-                                />
-                              </td>
-                              <td>
-                                <button
-                                  className="product-add-button"
-                                  onClick={() => handleAddToCart(product)}
-                                  disabled={product.stockQuantity === 0}
-                                  title="Add to cart"
-                                >
-                                  <span style={{ fontSize: 16, fontWeight: 'bold' }}>+</span>
-                                </button>
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
+                  <table className="product-table">
+                    <thead>
+                      <tr>
+                        <th>Image</th>
+                        <th>Name</th>
+                        <th>SKU</th>
+                        <th>Category</th>
+                        <th>Price</th>
+                        <th>Stock</th>
+                        <th>Quantity</th>
+                        <th>Action</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {products.map((product) => (
+                        <tr key={product.id}>
+                          <td>
+                            {product.imageUrl ? (
+                              <img src={product.imageUrl} alt={product.name} style={{ width: 48, height: 48, objectFit: 'cover', borderRadius: 4 }} />
+                            ) : (
+                              <div style={{ width: 48, height: 48, background: '#eee', borderRadius: 4 }} />
+                            )}
+                          </td>
+                          <td>{product.name}</td>
+                          <td>{product.sku || 'N/A'}</td>
+                          <td>{product.category?.name || product.categoryName || (() => {console.log('No category for product:', product); return 'N/A';})()}</td>
+                          <td>{productService.formatPrice(product.price)}</td>
+                          <td>{product.stockQuantity}</td>
+                          <td>
+                            <input
+                              type="number"
+                              className="create-order-quantity-input"
+                              value={productQuantities[product.id] || 1}
+                              min={1}
+                              max={product.stockQuantity}
+                              onChange={e => setProductQuantities({ ...productQuantities, [product.id]: e.target.value })}
+                            />
+                          </td>
+                          <td>
+                            <button
+                              className="product-add-button"
+                              onClick={() => handleAddToCart(product)}
+                              disabled={product.stockQuantity === 0}
+                              title="Add to cart"
+                            >
+                              <span style={{ fontSize: 16, fontWeight: 'bold' }}>+</span>
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                     ) : (
                       <div className="no-results">No products found for this store</div>
                     )}
-                  </div>
+                </div>
                 )}
               </div>
 
@@ -1026,19 +1026,19 @@ const CreateInStoreOrder = () => {
                         <div className="customer-info-item">
                           <p className="customer-info-label">Username</p>
                           <p>{newCustomerForm.username}</p>
-                        </div>
+                </div>
                         <div className="customer-info-item">
                           <p className="customer-info-label">Full Name</p>
                           <p>{newCustomerForm.fullName}</p>
-                        </div>
+                    </div>
                         <div className="customer-info-item">
                           <p className="customer-info-label">Email</p>
                           <p>{newCustomerForm.email}</p>
-                        </div>
+                    </div>
                         <div className="customer-info-item">
                           <p className="customer-info-label">Phone Number</p>
                           <p>{newCustomerForm.phoneNumber || 'N/A'}</p>
-                        </div>
+                    </div>
                       </>
                     )}
                   </div>
@@ -1189,11 +1189,11 @@ const CreateInStoreOrder = () => {
                     </button>
                   )}
                   {!createdOrder && (
-                    <button 
+                  <button 
                       className="order-create-button"
                     type="submit"
                       disabled={loading}
-                    >
+                  >
                       {loading ? (
                         <>
                           <span className="loading-spinner"></span>
@@ -1202,7 +1202,7 @@ const CreateInStoreOrder = () => {
                       ) : (
                         'Create Order'
                       )}
-                    </button>
+                  </button>
                   )}
                   {createdOrder && (
                     <button

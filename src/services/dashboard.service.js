@@ -24,36 +24,102 @@ class DashboardService {
         }
     }
 
-    calculateStats(products, orders) {
+    calculateStats(products, orders, dateRange) {
+        // Lọc đơn hàng theo date range nếu có
+        let filteredOrders = orders;
+        
+        if (dateRange && dateRange.startDate && dateRange.endDate) {
+            try {
+                const start = new Date(dateRange.startDate);
+                const end = new Date(dateRange.endDate);
+                
+                if (!isNaN(start.getTime()) && !isNaN(end.getTime())) {
+                    filteredOrders = orders.filter(order => {
+                        try {
+                            if (!order.createdAt) return false;
+                            const orderDate = new Date(order.createdAt);
+                            if (isNaN(orderDate.getTime())) return false;
+                            return orderDate >= start && orderDate <= end;
+                        } catch (err) {
+                            return false;
+                        }
+                    });
+                }
+            } catch (error) {
+                console.error('Error filtering orders by date range:', error);
+            }
+        }
+        
+        // Lọc đơn hàng đã hoàn thành và đã thanh toán
+        const completedOrders = filteredOrders.filter(o => o.status === 3 && o.paymentStatus === 1);
+        
         return {
             totalProducts: {
                 count: products.length,
                 quantity: products.reduce((sum, p) => sum + p.stockQuantity, 0)
             },
             totalValue: products.reduce((sum, p) => sum + p.price * p.stockQuantity, 0),
-            totalCustomers: [...new Set(orders.map(o => o.customerId))].length,
-            totalRevenue: orders.reduce((sum, order) => {
+            totalCustomers: [...new Set(filteredOrders.map(o => o.customerId))].length,
+            totalRevenue: completedOrders.reduce((sum, order) => {
+                if (!order.orderItems || !Array.isArray(order.orderItems)) {
+                    return sum;
+                }
                 const orderTotal = order.orderItems.reduce((itemSum, item) => {
-                    return itemSum + item.price * item.quantity;
+                    const price = Number(item.price) || 0;
+                    const quantity = Number(item.quantity) || 0;
+                    return itemSum + price * quantity;
                 }, 0);
                 return sum + orderTotal;
             }, 0)
         };
     }
 
-    getTopStores(stores, orders, products, limit = 10) {
+    getTopStores(stores, orders, products, limit = 10, dateRange) {
+        // Lọc đơn hàng theo date range nếu có
+        let filteredOrders = orders;
+        
+        if (dateRange && dateRange.startDate && dateRange.endDate) {
+            try {
+                const start = new Date(dateRange.startDate);
+                const end = new Date(dateRange.endDate);
+                
+                if (!isNaN(start.getTime()) && !isNaN(end.getTime())) {
+                    filteredOrders = orders.filter(order => {
+                        try {
+                            if (!order.createdAt) return false;
+                            const orderDate = new Date(order.createdAt);
+                            if (isNaN(orderDate.getTime())) return false;
+                            return orderDate >= start && orderDate <= end;
+                        } catch (err) {
+                            return false;
+                        }
+                    });
+                }
+            } catch (error) {
+                console.error('Error filtering orders by date range:', error);
+            }
+        }
+        
         return stores
             .map(store => ({
                 ...store,
-                revenue: orders
+                revenue: filteredOrders
                     .filter(o => o.status === 3 && o.paymentStatus === 1)
                     .reduce((sum, order) => {
+                        if (!order.orderItems || !Array.isArray(order.orderItems)) {
+                            return sum;
+                        }
+                        
                         const storeOrderItems = order.orderItems.filter(
                             item => products.find(p => p.id === item.productId)?.storeId === store.id
                         );
+                        
                         const orderTotal = storeOrderItems.reduce((itemSum, item) => {
-                            return itemSum + item.price * item.quantity;
+                            const price = Number(item.price) || 0;
+                            const quantity = Number(item.quantity) || 0;
+                            return itemSum + price * quantity;
                         }, 0);
+                        
                         return sum + orderTotal;
                     }, 0)
             }))
@@ -61,90 +127,209 @@ class DashboardService {
             .slice(0, limit);
     }
 
-    getTopProducts(products, orders, limit = 10) {
+    getTopProducts(products, orders, limit = 10, dateRange) {
+        // Lọc đơn hàng theo date range nếu có
+        let filteredOrders = orders;
+        
+        if (dateRange && dateRange.startDate && dateRange.endDate) {
+            try {
+                const start = new Date(dateRange.startDate);
+                const end = new Date(dateRange.endDate);
+                
+                if (!isNaN(start.getTime()) && !isNaN(end.getTime())) {
+                    filteredOrders = orders.filter(order => {
+                        try {
+                            if (!order.createdAt) return false;
+                            const orderDate = new Date(order.createdAt);
+                            if (isNaN(orderDate.getTime())) return false;
+                            return orderDate >= start && orderDate <= end;
+                        } catch (err) {
+                            return false;
+                        }
+                    });
+                }
+            } catch (error) {
+                console.error('Error filtering orders by date range:', error);
+            }
+        }
+        
+        // Lọc đơn hàng đã hoàn thành và đã thanh toán
+        const completedOrders = filteredOrders.filter(o => o.status === 3 && o.paymentStatus === 1);
+        
         return products
             .map(product => ({
                 ...product,
-                revenue: orders
-                    .flatMap(o => o.orderItems)
+                revenue: completedOrders
+                    .flatMap(o => o.orderItems || [])
                     .filter(item => item.productId === product.id)
-                    .reduce((sum, item) => sum + item.price * item.quantity, 0)
+                    .reduce((sum, item) => {
+                        const price = Number(item.price) || 0;
+                        const quantity = Number(item.quantity) || 0;
+                        return sum + price * quantity;
+                    }, 0)
             }))
             .sort((a, b) => b.revenue - a.revenue)
             .slice(0, limit);
     }
 
-    getTopCategories(categories, orders, products, limit = 10) {
+    getTopCategories(categories, orders, products, limit = 10, dateRange) {
+        // Lọc đơn hàng theo date range nếu có
+        let filteredOrders = orders;
+        
+        if (dateRange && dateRange.startDate && dateRange.endDate) {
+            try {
+                const start = new Date(dateRange.startDate);
+                const end = new Date(dateRange.endDate);
+                
+                if (!isNaN(start.getTime()) && !isNaN(end.getTime())) {
+                    filteredOrders = orders.filter(order => {
+                        try {
+                            if (!order.createdAt) return false;
+                            const orderDate = new Date(order.createdAt);
+                            if (isNaN(orderDate.getTime())) return false;
+                            return orderDate >= start && orderDate <= end;
+                        } catch (err) {
+                            return false;
+                        }
+                    });
+                }
+            } catch (error) {
+                console.error('Error filtering orders by date range:', error);
+            }
+        }
+        
+        // Lọc đơn hàng đã hoàn thành và đã thanh toán
+        const completedOrders = filteredOrders.filter(o => o.status === 3 && o.paymentStatus === 1);
+        
         return categories
             .map(category => ({
                 ...category,
-                soldQuantity: orders
-                    .flatMap(o => o.orderItems)
+                soldQuantity: completedOrders
+                    .flatMap(o => o.orderItems || [])
                     .filter(item => 
                         products.find(p => p.id === item.productId)?.categoryId === category.id
                     )
-                    .reduce((sum, item) => sum + item.quantity, 0)
+                    .reduce((sum, item) => {
+                        const quantity = Number(item.quantity) || 0;
+                        return sum + quantity;
+                    }, 0)
             }))
             .sort((a, b) => b.soldQuantity - a.soldQuantity)
             .slice(0, limit);
     }
 
     getOrdersByDateRange(orders, startDate, endDate) {
-        // Đảm bảo startDate và endDate là đối tượng Date
-        const start = new Date(startDate);
-        const end = new Date(endDate);
+        if (!orders || !orders.length) return [];
         
-        // Tạo mảng các ngày trong khoảng
-        const dates = this.generateDateRange(start, end);
-        
-        // Nhóm đơn hàng theo ngày
-        const ordersByDate = dates.map(date => {
-            const dateStr = date.toISOString().split('T')[0];
-            const count = orders.filter(order => {
-                const orderDate = new Date(order.createdAt).toISOString().split('T')[0];
-                return orderDate === dateStr;
-            }).length;
+        try {
+            // Đảm bảo startDate và endDate là đối tượng Date hợp lệ
+            const start = new Date(startDate);
+            const end = new Date(endDate);
             
-            return {
-                date: dateStr,
-                count
-            };
-        });
-        
-        return ordersByDate;
+            if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+                console.error('Invalid date range provided');
+                return [];
+            }
+            
+            // Tạo mảng các ngày trong khoảng
+            const dates = this.generateDateRange(start, end);
+            
+            // Nhóm đơn hàng theo ngày
+            const ordersByDate = dates.map(date => {
+                const dateStr = date.toISOString().split('T')[0];
+                const count = orders.filter(order => {
+                    try {
+                        // Kiểm tra ngày hợp lệ
+                        const orderCreatedAt = order.createdAt;
+                        if (!orderCreatedAt) return false;
+                        
+                        const orderDate = new Date(orderCreatedAt);
+                        if (isNaN(orderDate.getTime())) return false;
+                        
+                        return orderDate.toISOString().split('T')[0] === dateStr;
+                    } catch (err) {
+                        console.warn('Error processing order date:', err);
+                        return false;
+                    }
+                }).length;
+                
+                return {
+                    date: dateStr,
+                    count
+                };
+            });
+            
+            return ordersByDate;
+        } catch (error) {
+            console.error('Error in getOrdersByDateRange:', error);
+            return [];
+        }
     }
 
     getRevenueByDateRange(orders, startDate, endDate) {
-        // Đảm bảo startDate và endDate là đối tượng Date
-        const start = new Date(startDate);
-        const end = new Date(endDate);
+        if (!orders || !orders.length) return [];
         
-        // Tạo mảng các ngày trong khoảng
-        const dates = this.generateDateRange(start, end);
-        
-        // Tính doanh thu theo ngày
-        const revenueByDate = dates.map(date => {
-            const dateStr = date.toISOString().split('T')[0];
+        try {
+            // Đảm bảo startDate và endDate là đối tượng Date hợp lệ
+            const start = new Date(startDate);
+            const end = new Date(endDate);
             
-            const dailyRevenue = orders
-                .filter(order => {
-                    const orderDate = new Date(order.createdAt).toISOString().split('T')[0];
-                    return orderDate === dateStr;
-                })
-                .reduce((total, order) => {
-                    const orderTotal = order.orderItems.reduce((sum, item) => {
-                        return sum + (item.price * item.quantity);
+            if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+                console.error('Invalid date range provided');
+                return [];
+            }
+            
+            // Lọc đơn hàng đã hoàn thành và đã thanh toán
+            const completedOrders = orders.filter(o => o.status === 3 && o.paymentStatus === 1);
+            
+            // Tạo mảng các ngày trong khoảng
+            const dates = this.generateDateRange(start, end);
+            
+            // Tính doanh thu theo ngày
+            const revenueByDate = dates.map(date => {
+                const dateStr = date.toISOString().split('T')[0];
+                
+                const dailyRevenue = completedOrders
+                    .filter(order => {
+                        try {
+                            // Kiểm tra ngày hợp lệ
+                            const orderCreatedAt = order.createdAt;
+                            if (!orderCreatedAt) return false;
+                            
+                            const orderDate = new Date(orderCreatedAt);
+                            if (isNaN(orderDate.getTime())) return false;
+                            
+                            return orderDate.toISOString().split('T')[0] === dateStr;
+                        } catch (err) {
+                            console.warn('Error processing order date:', err);
+                            return false;
+                        }
+                    })
+                    .reduce((total, order) => {
+                        if (!order.orderItems || !Array.isArray(order.orderItems)) {
+                            return total;
+                        }
+                        
+                        const orderTotal = order.orderItems.reduce((sum, item) => {
+                            const price = Number(item.price) || 0;
+                            const quantity = Number(item.quantity) || 0;
+                            return sum + (price * quantity);
+                        }, 0);
+                        
+                        return total + orderTotal;
                     }, 0);
-                    return total + orderTotal;
-                }, 0);
+                
+                return {
+                    date: dateStr,
+                    revenue: dailyRevenue
+                };
+            });
             
-            return {
-                date: dateStr,
-                revenue: dailyRevenue
-            };
-        });
-        
-        return revenueByDate;
+            return revenueByDate;
+        } catch (error) {
+            console.error('Error in getRevenueByDateRange:', error);
+            return [];
+        }
     }
 
     generateDateRange(startDate, endDate) {

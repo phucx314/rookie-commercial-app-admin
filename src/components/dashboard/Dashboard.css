@@ -4,6 +4,82 @@
   --rankings-height: var(--chart-height);
 }
 
+/* Dashboard header */
+.dashboard-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--spacing-md);
+}
+
+.dashboard-header h1 {
+  margin: 0;
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-color);
+}
+
+.dashboard-actions {
+  display: flex;
+  gap: var(--spacing-sm);
+  align-items: center;
+}
+
+.export-data-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  padding: var(--button-padding);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+  color: var(--background-color);
+  background-color: var(--text-color);
+  border: 1px solid transparent;
+  border-radius: var(--border-radius-md);
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  transition: all var(--transition-fast);
+  cursor: pointer;
+}
+
+.export-data-btn:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+.export-data-btn:active {
+  transform: translateY(0);
+}
+
+.export-data-btn svg {
+  width: var(--icon-size-sm);
+  height: var(--icon-size-sm);
+}
+
+.files-list-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  padding: var(--button-padding);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+  color: var(--text-color);
+  background-color: transparent;
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-md);
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  transition: all var(--transition-fast);
+  cursor: pointer;
+}
+
+.files-list-btn:hover {
+  background-color: var(--hover-background);
+  transform: translateY(-1px);
+}
+
+.files-list-btn:active {
+  transform: translateY(0);
+}
+
 .dashboard h1 {
   margin-bottom: 20px;
   color: var(--text-color);
@@ -353,6 +429,19 @@
 @media (max-width: 768px) {
   .dashboard {
     --chart-height: 350px;
+  }
+
+  .dashboard-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--spacing-sm);
+    margin-bottom: var(--spacing-lg);
+  }
+
+  .export-data-btn {
+    width: 100%;
+    justify-content: center;
+    margin-top: var(--spacing-xs);
   }
 
   .stats-grid {

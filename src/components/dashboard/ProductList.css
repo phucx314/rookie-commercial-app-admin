@@ -717,4 +717,28 @@
   .store-table td:nth-child(3) {
     display: none;
   }
+}
+
+/* Styling cho form sản phẩm trong modal mới */
+.product-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+}
+
+.product-form input,
+.product-form textarea,
+.product-form select {
+  width: 100%;
+  padding: var(--input-padding);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-md);
+  background: var(--background-color);
+  color: var(--text-color);
+  font-size: var(--font-size-xs);
+}
+
+.product-form textarea {
+  min-height: 100px;
+  resize: vertical;
 } 

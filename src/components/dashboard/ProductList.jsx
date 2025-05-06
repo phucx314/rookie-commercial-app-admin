@@ -3,6 +3,7 @@ import { useSearchParams, useLocation, useNavigate } from 'react-router-dom';
 import { PlusIcon, PencilIcon, TrashIcon, StarIcon, ChevronUpIcon, ChevronDownIcon, MagnifyingGlassIcon, DocumentDuplicateIcon } from '@heroicons/react/24/outline';
 import { productService, categoryService, storeService, toastService } from '../../services';
 import Pagination from '../common/Pagination';
+import Modal from '../common/Modal';
 import './ProductList.css';
 
 const ProductList = () => {
@@ -926,128 +927,140 @@ const ProductList = () => {
             </div>
 
             {/* Create product modal */}
-            {isModalOpen && (
-                <div className="modal">
-                    <div className="modal-content">
-                        <h2>Add New Product</h2>
-                        <div className="modal-form-content">
-                          <input
-                              type="text"
-                              placeholder="Product Name"
-                              value={newProduct.name}
-                              onChange={(e) => setNewProduct({ ...newProduct, name: e.target.value })}
-                          />
-                          <textarea
-                              placeholder="Description"
-                              value={newProduct.description}
-                              onChange={(e) => setNewProduct({ ...newProduct, description: e.target.value })}
-                          />
-                          <input
-                              type="number"
-                              placeholder="Price"
-                              value={newProduct.price}
-                              onChange={(e) => setNewProduct({ ...newProduct, price: parseFloat(e.target.value) })}
-                          />
-                          <input
-                              type="number"
-                              placeholder="Stock Quantity"
-                              value={newProduct.stockQuantity}
-                              onChange={(e) => setNewProduct({ ...newProduct, stockQuantity: parseInt(e.target.value) })}
-                          />
-                          <input
-                              type="text"
-                              placeholder="Image URL"
-                              value={newProduct.imageUrl}
-                              onChange={(e) => setNewProduct({ ...newProduct, imageUrl: e.target.value })}
-                          />
-                          <select
-                              value={newProduct.categoryId}
-                              onChange={(e) => setNewProduct({ ...newProduct, categoryId: e.target.value })}
-                          >
-                              <option value="">Select Category</option>
-                              {categories.map(category => (
-                                  <option key={category.id} value={category.id}>{category.name}</option>
-                              ))}
-                          </select>
-                          <select
-                              value={newProduct.storeId}
-                              onChange={(e) => setNewProduct({ ...newProduct, storeId: e.target.value })}
-                          >
-                              <option value="">Select Store</option>
-                              {stores.map(store => (
-                                  <option key={store.id} value={store.id}>{store.name}</option>
-                              ))}
-                          </select>
+            <Modal
+                isOpen={isModalOpen}
+                onClose={() => setIsModalOpen(false)}
+                title="Add New Product"
+                footer={
+                    <>
+                        <button className="modal-cancel-button" onClick={() => setIsModalOpen(false)}>Cancel</button>
+                        <button className="modal-confirm-button" onClick={handleCreateProduct}>Create</button>
+                    </>
+                }
+            >
+                <div className="product-form">
+                        <input
+                            type="text"
+                            placeholder="Product Name"
+                            value={newProduct.name}
+                            onChange={(e) => setNewProduct({ ...newProduct, name: e.target.value })}
+                        />
+                        <textarea
+                            placeholder="Description"
+                            value={newProduct.description}
+                            onChange={(e) => setNewProduct({ ...newProduct, description: e.target.value })}
+                        />
+                        <input
+                            type="number"
+                            placeholder="Price"
+                            value={newProduct.price}
+                            onChange={(e) => setNewProduct({ ...newProduct, price: parseFloat(e.target.value) })}
+                        />
+                        <input
+                            type="number"
+                            placeholder="Stock Quantity"
+                            value={newProduct.stockQuantity}
+                            onChange={(e) => setNewProduct({ ...newProduct, stockQuantity: parseInt(e.target.value) })}
+                        />
+                        <input
+                            type="text"
+                            placeholder="Image URL"
+                            value={newProduct.imageUrl}
+                            onChange={(e) => setNewProduct({ ...newProduct, imageUrl: e.target.value })}
+                        />
+                        <select
+                            value={newProduct.categoryId}
+                            onChange={(e) => setNewProduct({ ...newProduct, categoryId: e.target.value })}
+                        >
+                            <option value="">Select Category</option>
+                            {categories.map(category => (
+                                <option key={category.id} value={category.id}>{category.name}</option>
+                            ))}
+                        </select>
+                        <select
+                            value={newProduct.storeId}
+                            onChange={(e) => setNewProduct({ ...newProduct, storeId: e.target.value })}
+                        >
+                            <option value="">Select Store</option>
+                            {stores.map(store => (
+                                <option key={store.id} value={store.id}>{store.name}</option>
+                            ))}
+                        </select>
                         </div>
-                        <div className="modal-actions">
-                            <button onClick={() => setIsModalOpen(false)}>Cancel</button>
-                            <button onClick={handleCreateProduct}>Create</button>
-                        </div>
-                    </div>
-                </div>
-            )}
+            </Modal>
 
             {/* Edit product modal */}
-            {isEditModalOpen && selectedProduct && (
-                <div className="modal">
-                    <div className="modal-content">
-                        <h2>Edit Product</h2>
-                        <div className="modal-form-content">
-                          <input
-                              type="text"
-                              placeholder="Product Name"
-                              value={selectedProduct.name}
-                              onChange={(e) => setSelectedProduct({ ...selectedProduct, name: e.target.value })}
-                          />
-                          <textarea
-                              placeholder="Description"
-                              value={selectedProduct.description}
-                              onChange={(e) => setSelectedProduct({ ...selectedProduct, description: e.target.value })}
-                          />
-                          <input
-                              type="number"
-                              placeholder="Price"
-                              value={selectedProduct.price}
-                              onChange={(e) => setSelectedProduct({ ...selectedProduct, price: parseFloat(e.target.value) })}
-                          />
-                          <input
-                              type="number"
-                              placeholder="Stock Quantity"
-                              value={selectedProduct.stockQuantity}
-                              onChange={(e) => setSelectedProduct({ ...selectedProduct, stockQuantity: parseInt(e.target.value) })}
-                          />
-                          <input
-                              type="text"
-                              placeholder="Image URL"
-                              value={selectedProduct.imageUrl}
-                              onChange={(e) => setSelectedProduct({ ...selectedProduct, imageUrl: e.target.value })}
-                          />
-                          <select
-                              value={selectedProduct.categoryId}
-                              onChange={(e) => setSelectedProduct({ ...selectedProduct, categoryId: e.target.value })}
-                          >
-                              <option value="">Select Category</option>
-                              {categories.map(category => (
-                                  <option key={category.id} value={category.id}>{category.name}</option>
-                              ))}
-                          </select>
-                          <select
-                              value={selectedProduct.storeId}
-                              onChange={(e) => setSelectedProduct({ ...selectedProduct, storeId: e.target.value })}
-                          >
-                              <option value="">Select Store</option>
-                              {stores.map(store => (
-                                  <option key={store.id} value={store.id}>{store.name}</option>
-                              ))}
-                          </select>
-                        </div>
-                        <div className="modal-actions">
-                            <button onClick={() => setIsEditModalOpen(false)}>Cancel</button>
-                            <button onClick={() => handleUpdateProduct(selectedProduct.id, selectedProduct)}>Save</button>
-                        </div>
-                    </div>
+            <Modal
+                isOpen={isEditModalOpen && !!selectedProduct}
+                onClose={() => setIsEditModalOpen(false)}
+                title="Edit Product"
+                footer={
+                    <>
+                        <button className="modal-cancel-button" onClick={() => setIsEditModalOpen(false)}>Cancel</button>
+                        <button 
+                            className="modal-confirm-button" 
+                            onClick={() => {
+                                handleUpdateProduct(selectedProduct.id, selectedProduct);
+                                setIsEditModalOpen(false);
+                            }}
+                        >
+                            Update
+                        </button>
+                    </>
+                }
+            >
+                {selectedProduct && (
+                    <div className="product-form">
+                        <input
+                            type="text"
+                            placeholder="Product Name"
+                            value={selectedProduct.name}
+                            onChange={(e) => setSelectedProduct({ ...selectedProduct, name: e.target.value })}
+                        />
+                        <textarea
+                            placeholder="Description"
+                            value={selectedProduct.description}
+                            onChange={(e) => setSelectedProduct({ ...selectedProduct, description: e.target.value })}
+                        />
+                        <input
+                            type="number"
+                            placeholder="Price"
+                            value={selectedProduct.price}
+                            onChange={(e) => setSelectedProduct({ ...selectedProduct, price: parseFloat(e.target.value) })}
+                        />
+                        <input
+                            type="number"
+                            placeholder="Stock Quantity"
+                            value={selectedProduct.stockQuantity}
+                            onChange={(e) => setSelectedProduct({ ...selectedProduct, stockQuantity: parseInt(e.target.value) })}
+                        />
+                        <input
+                            type="text"
+                            placeholder="Image URL"
+                            value={selectedProduct.imageUrl}
+                            onChange={(e) => setSelectedProduct({ ...selectedProduct, imageUrl: e.target.value })}
+                        />
+                        <select
+                            value={selectedProduct.categoryId}
+                            onChange={(e) => setSelectedProduct({ ...selectedProduct, categoryId: e.target.value })}
+                        >
+                            <option value="">Select Category</option>
+                            {categories.map(category => (
+                                <option key={category.id} value={category.id}>{category.name}</option>
+                            ))}
+                        </select>
+                        <select
+                            value={selectedProduct.storeId}
+                            onChange={(e) => setSelectedProduct({ ...selectedProduct, storeId: e.target.value })}
+                        >
+                            <option value="">Select Store</option>
+                            {stores.map(store => (
+                                <option key={store.id} value={store.id}>{store.name}</option>
+                            ))}
+                        </select>
                 </div>
             )}
+            </Modal>
         </div>
     );
 };

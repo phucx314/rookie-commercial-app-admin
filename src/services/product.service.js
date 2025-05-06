@@ -50,20 +50,16 @@ class ProductService {
         }
     }
 
-    async getPaginatedProductsByStore(storeId, pageIndex = 1, pageSize = 10, sortBy = null, sortDirection = 'asc') {
+    async getPaginatedProductsByStore(storeId, pageIndex = 1, pageSize = 10, sortBy = 'name', sortDirection = 'asc') {
         try {
             console.log('Fetching paginated products for store:', storeId);
             const params = { 
-                pageIndex, 
-                pageSize,
-                storeId
+                    pageIndex, 
+                    pageSize,
+                    storeId,
+                    sortBy,
+                    sortDirection
             };
-
-            // Thêm các tham số sắp xếp nếu được cung cấp
-            if (sortBy) {
-                params.sortBy = sortBy;
-                params.sortDirection = sortDirection;
-            }
 
             const response = await axios.get('/Product/paged', { params });
             console.log('Store products API response:', response.data);
@@ -74,13 +70,15 @@ class ProductService {
         }
     }
 
-    async getPaginatedProductsByCategoryAndStore(categoryId, storeId, pageIndex = 1, pageSize = 10) {
+    async getPaginatedProductsByCategoryAndStore(categoryId, storeId, pageIndex = 1, pageSize = 10, sortBy = 'name', sortDirection = 'asc') {
         try {
             const response = await axios.get(`/Product/category/${categoryId}/paged`, { 
                 params: { 
                     pageIndex, 
                     pageSize,
-                    storeId
+                    storeId,
+                    sortBy,
+                    sortDirection
                 } 
             });
             return response.data;
