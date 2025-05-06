@@ -295,7 +295,7 @@ class ExportService {
   }
 
   /**
-   * Chuẩn bị dữ liệu thống kê tổng quan
+   * Chuẩn bị dữ liệu thống kê để xuất
    * @param {Object} stats - Dữ liệu thống kê từ Dashboard
    * @returns {Array} - Mảng dữ liệu để xuất
    */
@@ -307,7 +307,7 @@ class ExportService {
       if (key === 'totalProducts') {
         value = `${stat.count} products / ${stat.quantity} quantity`;
       } else if (key.includes('total') && key !== 'totalCustomers') {
-        value = stat.value.toLocaleString('vi-VN');
+        value = stat.value.toLocaleString('vi-VN') + ' VND';
       } else {
         value = stat.count;
       }
@@ -326,15 +326,13 @@ class ExportService {
    * @returns {Array} - Mảng dữ liệu để xuất
    */
   prepareTopStoresData(topStores) {
-    if (!topStores) return [];
+    if (!topStores || !topStores.length) return [];
     
     return topStores.map((store, index) => ({
       Rank: index + 1,
-      StoreName: store.name,
-      StoreID: store.id,
-      Address: store.address || 'N/A',
-      Revenue: store.revenue.toLocaleString('vi-VN'),
-      Seller: store.sellerName || 'N/A'
+      StoreID: store.id || 'N/A',
+      StoreName: store.name || 'Unnamed Store',
+      Revenue: (store.revenue ? store.revenue.toLocaleString('vi-VN') : '0') + ' VND'
     }));
   }
 
@@ -344,16 +342,13 @@ class ExportService {
    * @returns {Array} - Mảng dữ liệu để xuất
    */
   prepareTopProductsData(topProducts) {
-    if (!topProducts) return [];
+    if (!topProducts || !topProducts.length) return [];
     
     return topProducts.map((product, index) => ({
       Rank: index + 1,
-      ProductName: product.name,
-      ProductID: product.id,
-      StoreID: product.storeId || 'N/A',
-      Revenue: product.revenue.toLocaleString('vi-VN'),
-      Price: product.price ? product.price.toLocaleString('vi-VN') : 'N/A',
-      StockQuantity: product.stockQuantity || 0
+      ProductID: product.id || 'N/A',
+      ProductName: product.name || 'Unnamed Product',
+      Revenue: (product.revenue ? product.revenue.toLocaleString('vi-VN') : '0') + ' VND'
     }));
   }
 
@@ -363,13 +358,13 @@ class ExportService {
    * @returns {Array} - Mảng dữ liệu để xuất
    */
   prepareTopCategoriesData(topCategories) {
-    if (!topCategories) return [];
+    if (!topCategories || !topCategories.length) return [];
     
     return topCategories.map((category, index) => ({
       Rank: index + 1,
-      CategoryName: category.name,
-      CategoryID: category.id,
-      SoldQuantity: category.soldQuantity
+      CategoryID: category.id || 'N/A',
+      CategoryName: category.name || 'Unnamed Category',
+      SoldQuantity: category.soldQuantity || 0
     }));
   }
 
@@ -380,17 +375,24 @@ class ExportService {
    * @returns {Array} - Mảng dữ liệu để xuất
    */
   prepareChartData(ordersByDate, revenueByDate) {
-    if (!ordersByDate || !revenueByDate) return [];
+    if (!ordersByDate || !revenueByDate || !ordersByDate.length || !revenueByDate.length) return [];
+    
+    // Tạo map từ dữ liệu doanh thu để tìm kiếm nhanh
+    const revenueMap = {};
+    revenueByDate.forEach(item => {
+      revenueMap[item.date] = item.revenue;
+    });
     
     // Kết hợp dữ liệu từ 2 mảng
-    const combinedData = ordersByDate.map((orderData, index) => {
-      const revenueData = revenueByDate[index] || { revenue: 0 };
+    const combinedData = ordersByDate.map(orderData => {
       const date = new Date(orderData.date);
+      const formattedDate = `${date.getDate()}/${date.getMonth() + 1}/${date.getFullYear()}`;
+      const revenue = revenueMap[orderData.date] || 0;
       
       return {
-        Date: `${date.getDate()}/${date.getMonth() + 1}/${date.getFullYear()}`,
+        Date: formattedDate,
         OrderCount: orderData.count,
-        Revenue: revenueData.revenue.toLocaleString('vi-VN')
+        Revenue: revenue.toLocaleString('vi-VN') + ' VND'
       };
     });
     

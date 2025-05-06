@@ -10,13 +10,12 @@ import './ExportDataModal.css';
 const ExportDataModal = ({ 
   isOpen, 
   onClose, 
-  stats, 
-  topStores, 
-  topProducts, 
-  topCategories, 
-  ordersByDate,
-  revenueByDate,
-  dashboardData,
+  stats = {}, 
+  topStores = [], 
+  topProducts = [], 
+  topCategories = [], 
+  ordersByDate = [],
+  revenueByDate = [],
   dashboardDateRange
 }) => {
   // State for checkboxes
@@ -129,10 +128,71 @@ const ExportDataModal = ({
     return {
       ...data,
       chart: selectedData.chart ? {
-        ordersByDate: dashboardService.getOrdersByDateRange(ordersByDate, dateRange.startDate, dateRange.endDate),
-        revenueByDate: dashboardService.getRevenueByDateRange(revenueByDate, dateRange.startDate, dateRange.endDate)
+        ordersByDate: ordersByDate ? ordersByDate.filter(item => {
+          const date = new Date(item.date);
+          return date >= new Date(dateRange.startDate) && date <= new Date(dateRange.endDate);
+        }) : [],
+        revenueByDate: revenueByDate ? revenueByDate.filter(item => {
+          const date = new Date(item.date);
+          return date >= new Date(dateRange.startDate) && date <= new Date(dateRange.endDate);
+        }) : []
       } : null
     };
+  };
+  
+  // Fetch new data based on selected date range
+  const fetchDataForExport = async () => {
+    try {
+      // Tạo date range để gửi lên API - thêm +1 ngày cho endDate để bao gồm toàn bộ ngày hiện tại
+      const apiDateRange = {
+        startDate: dateRange.startDate,
+        // Thêm 1 ngày cho endDate để bao gồm cả ngày được chọn
+        endDate: new Date(new Date(dateRange.endDate).setDate(new Date(dateRange.endDate).getDate() + 1))
+          .toISOString().split('T')[0]
+      };
+      
+      // Fetch dashboard data with the export date range
+      const data = await dashboardService.getDashboardData(apiDateRange);
+      
+      // Lọc bỏ ngày cuối cùng (ngày +1) từ dữ liệu biểu đồ
+      const filteredOrdersByDate = data.ordersByDate ? data.ordersByDate.slice(0, -1) : [];
+      const filteredRevenueByDate = data.revenueByDate ? data.revenueByDate.slice(0, -1) : [];
+      
+      return {
+        stats: {
+          totalProducts: {
+            count: data.stats.productStats.totalCount,
+            quantity: data.stats.productStats.totalQuantity,
+            label: "Total Products",
+            sublabel: "products / quantity",
+          },
+          totalValue: {
+            value: data.stats.totalInventoryValue,
+            label: "Total Value",
+            sublabel: "inventory value",
+          },
+          totalCustomers: {
+            count: data.stats.totalCustomers,
+            label: "Total Customers",
+            sublabel: "customers who purchased",
+          },
+          totalRevenue: {
+            value: data.stats.totalRevenue,
+            label: "Total Revenue",
+            sublabel: "from all stores",
+          },
+        },
+        topStores: data.topStores,
+        topProducts: data.topProducts,
+        topCategories: data.topCategories,
+        ordersByDate: filteredOrdersByDate,
+        revenueByDate: filteredRevenueByDate
+      };
+    } catch (error) {
+      console.error('Error fetching data for export:', error);
+      toastService.error('Error fetching data for export: ' + error.message);
+      throw error;
+    }
   };
   
   // Handle export data
@@ -152,74 +212,34 @@ const ExportDataModal = ({
     }
     
     try {
-      // Lọc dữ liệu theo date range
-      const dateRangeObj = {
-        startDate: dateRange.startDate,
-        endDate: dateRange.endDate
-      };
+      // Fetch data with the selected date range 
+      // (important: ensures all data is consistent with the date range)
+      const exportData = await fetchDataForExport();
       
-      // Lọc dữ liệu trực tiếp từ dashboardData với date range của modal
-      const filteredOrdersByDate = dashboardService.getOrdersByDateRange(dashboardData.orders, dateRange.startDate, dateRange.endDate);
-      const filteredRevenueByDate = dashboardService.getRevenueByDateRange(dashboardData.orders, dateRange.startDate, dateRange.endDate);
+      // Prepare data for export based on selected options
+      const data = {};
       
-      // Tính toán lại các thống kê với dateRange mới
-      const recalculatedStats = dashboardService.calculateStats(dashboardData.products, dashboardData.orders, dateRangeObj);
-      const filteredTopStores = dashboardService.getTopStores(dashboardData.stores, dashboardData.orders, dashboardData.products, 10, dateRangeObj);
-      const filteredTopProducts = dashboardService.getTopProducts(dashboardData.products, dashboardData.orders, 10, dateRangeObj);
-      const filteredTopCategories = dashboardService.getTopCategories(dashboardData.categories, dashboardData.orders, dashboardData.products, 10, dateRangeObj);
+      if (selectedData.stats) {
+        data['Overview Stats'] = exportService.prepareStatsData(exportData.stats);
+      }
+      
+      if (selectedData.stores) {
+        data['Top Stores'] = exportService.prepareTopStoresData(exportData.topStores);
+      }
+      
+      if (selectedData.products) {
+        data['Top Products'] = exportService.prepareTopProductsData(exportData.topProducts);
+      }
+      
+      if (selectedData.categories) {
+        data['Top Categories'] = exportService.prepareTopCategoriesData(exportData.topCategories);
+      }
+      
+      if (selectedData.chart) {
+        data['Sales by Date'] = exportService.prepareChartData(exportData.ordersByDate, exportData.revenueByDate);
+      }
       
       if (exportFormat === 'excel') {
-        // Prepare data for each sheet
-        const data = {};
-        
-        if (selectedData.stats) {
-          // Chuẩn bị dữ liệu thống kê với định dạng UI phù hợp
-          const formattedStats = {
-            totalProducts: {
-              count: dashboardData.products.length,
-              quantity: dashboardData.products.reduce((sum, p) => sum + p.stockQuantity, 0),
-              label: "Total Products",
-              sublabel: "products / quantity"
-            },
-            totalValue: {
-              value: dashboardData.products.reduce((sum, p) => sum + p.price * p.stockQuantity, 0),
-              label: "Total Value",
-              sublabel: "inventory value"
-            },
-            totalCustomers: {
-              count: recalculatedStats.totalCustomers,
-              label: "Total Customers",
-              sublabel: "customers who purchased"
-            },
-            totalRevenue: {
-              value: recalculatedStats.totalRevenue,
-              label: "Total Revenue",
-              sublabel: "from all stores"
-            }
-          };
-          data['Overview Stats'] = exportService.prepareStatsData(formattedStats);
-        }
-        
-        if (selectedData.stores) {
-          // Sử dụng dữ liệu topStores đã được lọc mới
-          data['Top Stores'] = exportService.prepareTopStoresData(filteredTopStores);
-        }
-        
-        if (selectedData.products) {
-          // Sử dụng dữ liệu topProducts đã được lọc mới
-          data['Top Products'] = exportService.prepareTopProductsData(filteredTopProducts);
-        }
-        
-        if (selectedData.categories) {
-          // Sử dụng dữ liệu topCategories đã được lọc mới
-          data['Top Categories'] = exportService.prepareTopCategoriesData(filteredTopCategories);
-        }
-        
-        if (selectedData.chart) {
-          // Sử dụng dữ liệu chart đã được lọc mới
-          data['Sales by Date'] = exportService.prepareChartData(filteredOrdersByDate, filteredRevenueByDate);
-        }
-        
         // Export to Excel
         if (Object.keys(data).length > 0) {
           // Add date range to filename
@@ -239,31 +259,7 @@ const ExportDataModal = ({
         const pdfsToExport = [];
         
         if (selectedData.stats) {
-          // Chuẩn bị dữ liệu thống kê với định dạng UI phù hợp
-          const formattedStats = {
-            totalProducts: {
-              count: dashboardData.products.length,
-              quantity: dashboardData.products.reduce((sum, p) => sum + p.stockQuantity, 0),
-              label: "Total Products",
-              sublabel: "products / quantity"
-            },
-            totalValue: {
-              value: dashboardData.products.reduce((sum, p) => sum + p.price * p.stockQuantity, 0),
-              label: "Total Value",
-              sublabel: "inventory value"
-            },
-            totalCustomers: {
-              count: recalculatedStats.totalCustomers,
-              label: "Total Customers",
-              sublabel: "customers who purchased"
-            },
-            totalRevenue: {
-              value: recalculatedStats.totalRevenue,
-              label: "Total Revenue",
-              sublabel: "from all stores"
-            }
-          };
-          const statsData = exportService.prepareStatsData(formattedStats);
+          const statsData = exportService.prepareStatsData(exportData.stats);
           pdfsToExport.push({
             data: statsData, 
             title: 'Dashboard Overview Statistics', 
@@ -272,8 +268,7 @@ const ExportDataModal = ({
         }
         
         if (selectedData.stores) {
-          // Sử dụng dữ liệu topStores đã được lọc mới
-          const storesData = exportService.prepareTopStoresData(filteredTopStores);
+          const storesData = exportService.prepareTopStoresData(exportData.topStores);
           pdfsToExport.push({
             data: storesData, 
             title: 'Top Performing Stores', 
@@ -282,8 +277,7 @@ const ExportDataModal = ({
         }
         
         if (selectedData.products) {
-          // Sử dụng dữ liệu topProducts đã được lọc mới
-          const productsData = exportService.prepareTopProductsData(filteredTopProducts);
+          const productsData = exportService.prepareTopProductsData(exportData.topProducts);
           pdfsToExport.push({
             data: productsData, 
             title: 'Top Selling Products', 
@@ -292,8 +286,7 @@ const ExportDataModal = ({
         }
         
         if (selectedData.categories) {
-          // Sử dụng dữ liệu topCategories đã được lọc mới
-          const categoriesData = exportService.prepareTopCategoriesData(filteredTopCategories);
+          const categoriesData = exportService.prepareTopCategoriesData(exportData.topCategories);
           pdfsToExport.push({
             data: categoriesData, 
             title: 'Top Categories by Sales', 
@@ -302,8 +295,7 @@ const ExportDataModal = ({
         }
         
         if (selectedData.chart) {
-          // Sử dụng dữ liệu chart đã được lọc mới
-          const chartData = exportService.prepareChartData(filteredOrdersByDate, filteredRevenueByDate);
+          const chartData = exportService.prepareChartData(exportData.ordersByDate, exportData.revenueByDate);
           pdfsToExport.push({
             data: chartData, 
             title: `Sales and Revenue by Date (${dateRange.startDate} to ${dateRange.endDate})`, 

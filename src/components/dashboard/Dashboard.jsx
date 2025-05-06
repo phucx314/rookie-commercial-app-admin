@@ -17,6 +17,7 @@ import {
   Title,
   Tooltip,
   Legend,
+  Filler,
 } from 'chart.js';
 import { Line } from 'react-chartjs-2';
 import dashboardService from "../../services/dashboard.service";
@@ -35,17 +36,12 @@ ChartJS.register(
   BarElement,
   Title,
   Tooltip,
-  Legend
+  Legend,
+  Filler
 );
 
 const Dashboard = () => {
   const navigate = useNavigate();
-  const [dashboardData, setDashboardData] = useState({
-    products: [],
-    orders: [],
-    stores: [],
-    categories: []
-  });
   const [stats, setStats] = useState({});
   const [topStores, setTopStores] = useState([]);
   const [topProducts, setTopProducts] = useState([]);
@@ -73,9 +69,6 @@ const Dashboard = () => {
 
   const fetchDashboardData = async () => {
     try {
-      const data = await dashboardService.getDashboardData();
-      setDashboardData(data);
-
       // Set default date range to last 7 days
       const today = new Date();
       const sevenDaysAgo = new Date(today);
@@ -87,62 +80,63 @@ const Dashboard = () => {
       };
 
       setDateRange(defaultDateRange);
-
-      // Cập nhật tất cả dữ liệu với date range mặc định
-      updateDashboardData(data, defaultDateRange);
-    } catch (error) {
-      console.error("Error fetching dashboard data:", error);
-      toastService.error("Cannot load dashboard data. Please try again later.");
-    }
-  };
-
-  const updateDashboardData = (data, dateRangeObj) => {
-    try {
-      const { startDate, endDate } = dateRangeObj;
-      dashboardService.validateDateRange(startDate, endDate);
       
-      // Cập nhật thống kê tổng quan
-      const calculatedStats = dashboardService.calculateStats(data.products, data.orders, dateRangeObj);
+      // Tạo date range để gửi lên API - thêm +1 ngày cho endDate để bao gồm toàn bộ ngày hiện tại
+      const apiDateRange = {
+        startDate: defaultDateRange.startDate,
+        // Thêm 1 ngày cho endDate để bao gồm cả ngày được chọn
+        endDate: new Date(new Date(defaultDateRange.endDate).setDate(new Date(defaultDateRange.endDate).getDate() + 1))
+          .toISOString().split('T')[0]
+      };
+      
+      // Fetch dashboard data with date range
+      const data = await dashboardService.getDashboardData(apiDateRange);
+      
+      // Lọc bỏ ngày cuối cùng (ngày +1) từ dữ liệu biểu đồ
+      const filteredOrdersByDate = data.ordersByDate ? data.ordersByDate.slice(0, -1) : [];
+      const filteredRevenueByDate = data.revenueByDate ? data.revenueByDate.slice(0, -1) : [];
+      
+      // Set dashboard data directly from the API response
       setStats({
         totalProducts: {
-          ...calculatedStats.totalProducts,
+          count: data.stats.productStats.totalCount,
+          quantity: data.stats.productStats.totalQuantity,
           icon: ShoppingBagIcon,
           label: "Total Products",
           sublabel: "products / quantity",
         },
         totalValue: {
-          value: calculatedStats.totalValue,
+          value: data.stats.totalInventoryValue,
           icon: CurrencyDollarIcon,
           label: "Total Value",
           sublabel: "inventory value",
         },
         totalCustomers: {
-          count: calculatedStats.totalCustomers,
+          count: data.stats.totalCustomers,
           icon: UserGroupIcon,
           label: "Total Customers",
           sublabel: "customers who purchased",
         },
         totalRevenue: {
-          value: calculatedStats.totalRevenue,
+          value: data.stats.totalRevenue,
           icon: BuildingStorefrontIcon,
           label: "Total Revenue",
           sublabel: "from all stores",
         },
       });
-
-      // Cập nhật các top ranking
-      setTopStores(dashboardService.getTopStores(data.stores, data.orders, data.products, 10, dateRangeObj));
-      setTopProducts(dashboardService.getTopProducts(data.products, data.orders, 10, dateRangeObj));
-      setTopCategories(dashboardService.getTopCategories(data.categories, data.orders, data.products, 10, dateRangeObj));
-
-      // Cập nhật dữ liệu biểu đồ
-      setOrdersByDate(dashboardService.getOrdersByDateRange(data.orders, startDate, endDate));
-      setRevenueByDate(dashboardService.getRevenueByDateRange(data.orders, startDate, endDate));
       
-      setDateError('');
+      // Set rankings data
+      setTopStores(data.topStores);
+      setTopProducts(data.topProducts);
+      setTopCategories(data.topCategories);
+      
+      // Set chart data - dùng dữ liệu đã lọc
+      setOrdersByDate(filteredOrdersByDate);
+      setRevenueByDate(filteredRevenueByDate);
+      
     } catch (error) {
-      setDateError(error.message);
-      toastService.error(error.message);
+      console.error("Error fetching dashboard data:", error);
+      toastService.error("Cannot load dashboard data. Please try again later.");
     }
   };
 
@@ -155,10 +149,71 @@ const Dashboard = () => {
     setDateError('');
   };
 
-  const handleDateRangeSubmit = (e) => {
+  const handleDateRangeSubmit = async (e) => {
     e.preventDefault();
-    // Cập nhật tất cả dữ liệu dashboard với date range mới
-    updateDashboardData(dashboardData, dateRange);
+    
+    try {
+      // Validate date range
+      dashboardService.validateDateRange(dateRange.startDate, dateRange.endDate);
+      
+      // Tạo date range để gửi lên API - thêm +1 ngày cho endDate
+      const apiDateRange = {
+        startDate: dateRange.startDate,
+        // Thêm 1 ngày cho endDate để bao gồm cả ngày được chọn
+        endDate: new Date(new Date(dateRange.endDate).setDate(new Date(dateRange.endDate).getDate() + 1))
+          .toISOString().split('T')[0]
+      };
+      
+      // Fetch new data with the selected date range
+      const data = await dashboardService.getDashboardData(apiDateRange);
+      
+      // Lọc bỏ ngày cuối cùng (ngày +1) từ dữ liệu biểu đồ
+      const filteredOrdersByDate = data.ordersByDate ? data.ordersByDate.slice(0, -1) : [];
+      const filteredRevenueByDate = data.revenueByDate ? data.revenueByDate.slice(0, -1) : [];
+      
+      // Update state with new data
+      setStats({
+        totalProducts: {
+          count: data.stats.productStats.totalCount,
+          quantity: data.stats.productStats.totalQuantity,
+          icon: ShoppingBagIcon,
+          label: "Total Products",
+          sublabel: "products / quantity",
+        },
+        totalValue: {
+          value: data.stats.totalInventoryValue,
+          icon: CurrencyDollarIcon,
+          label: "Total Value",
+          sublabel: "inventory value",
+        },
+        totalCustomers: {
+          count: data.stats.totalCustomers,
+          icon: UserGroupIcon,
+          label: "Total Customers",
+          sublabel: "customers who purchased",
+        },
+        totalRevenue: {
+          value: data.stats.totalRevenue,
+          icon: BuildingStorefrontIcon,
+          label: "Total Revenue",
+          sublabel: "from all stores",
+        },
+      });
+      
+      // Update rankings
+      setTopStores(data.topStores);
+      setTopProducts(data.topProducts);
+      setTopCategories(data.topCategories);
+      
+      // Update chart data - dùng dữ liệu đã lọc
+      setOrdersByDate(filteredOrdersByDate);
+      setRevenueByDate(filteredRevenueByDate);
+      
+      setDateError('');
+    } catch (error) {
+      setDateError(error.message);
+      toastService.error(error.message);
+    }
   };
   
   // Hàm mở modal xuất dữ liệu
@@ -355,7 +410,6 @@ const Dashboard = () => {
         topCategories={topCategories}
         ordersByDate={ordersByDate}
         revenueByDate={revenueByDate}
-        dashboardData={dashboardData}
         dashboardDateRange={dateRange}
       />
       
