@@ -10,16 +10,21 @@ class StoreService {
         }
     }
 
-    async getPaginatedStores(pageIndex = 1, pageSize = 12, status = 'all', searchTerm = '') {
+    async getPaginatedStores(pageIndex = 1, pageSize = 12, status = 'all', searchTerm = '', sortBy = 'Name', sortDirection = 'asc') {
         try {
-            const response = await axios.get('/Store/paged', { 
-                params: { 
-                    pageIndex, 
-                    pageSize, 
-                    status,
-                    search: searchTerm 
-                } 
-            });
+            // Đảm bảo các tham số không bao giờ null hoặc undefined và đúng casing (PascalCase) cho .NET
+            const params = { 
+                PageIndex: pageIndex || 1, 
+                PageSize: pageSize || 12, 
+                status: status || 'all',
+                search: searchTerm || '',
+                SortBy: sortBy || 'Name',
+                SortDirection: sortDirection || 'asc'
+            };
+            
+            console.log('Gọi API với tham số:', params);
+            
+            const response = await axios.get('/Store/paged', { params });
             return response.data;
         } catch (error) {
             console.error('Error fetching paginated stores:', error);
@@ -27,9 +32,17 @@ class StoreService {
         }
     }
 
-    async searchStores(searchTerm, pageIndex = 1, pageSize = 12, status = 'all') {
+    async searchStores(searchTerm = '', pageIndex = 1, pageSize = 12, status = 'all', sortBy = 'Name', sortDirection = 'asc') {
         try {
-            return await this.getPaginatedStores(pageIndex, pageSize, status, searchTerm);
+            // Đảm bảo các tham số không bao giờ null hoặc undefined
+            return await this.getPaginatedStores(
+                pageIndex || 1, 
+                pageSize || 12, 
+                status || 'all', 
+                searchTerm || '',
+                sortBy || 'Name',
+                sortDirection || 'asc'
+            );
         } catch (error) {
             console.error('Error searching stores:', error);
             throw error;
@@ -106,6 +119,19 @@ class StoreService {
             if (aValue > bValue) return sortConfig.direction === 'asc' ? 1 : -1;
             return 0;
         });
+    }
+
+    // Hàm tạo shipping address mặc định dựa trên thông tin store
+    createDefaultShippingAddress(store) {
+        if (!store) return 'At store';
+        
+        // Nếu có địa chỉ cửa hàng, sử dụng nó
+        if (store.address) {
+            return `At store ${store.name}: ${store.address}`;
+        }
+        
+        // Nếu không có địa chỉ, chỉ dùng tên cửa hàng
+        return `At store ${store.name}`;
     }
 
     // Hàm mới thêm vào

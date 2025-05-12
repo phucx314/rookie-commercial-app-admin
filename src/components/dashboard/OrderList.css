@@ -265,7 +265,57 @@
   color: var(--text-color);
 }
 
+.order-actions .order-print-btn {
+  background-color: #4CAF50;
+  color: white;
+}
+
+.order-actions .order-print-btn:hover {
+  opacity: 0.9;
+}
+
 .order-actions button svg {
+  width: var(--icon-size-sm);
+  height: var(--icon-size-sm);
+}
+
+.actions-cell {
+  display: flex;
+  gap: var(--spacing-xs);
+  justify-content: flex-start;
+}
+
+.order-edit-btn, .order-print-btn {
+  padding: var(--spacing-xs);
+  border: none;
+  border-radius: var(--border-radius-sm);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition-fast);
+}
+
+.order-edit-btn {
+  background-color: var(--hover-background);
+  color: var(--text-color);
+}
+
+.order-print-btn {
+  background-color: #4CAF50;
+  color: white;
+}
+
+.order-print-btn:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+.order-print-btn:active {
+  transform: translateY(0);
+}
+
+.order-action-icon {
   width: var(--icon-size-sm);
   height: var(--icon-size-sm);
 }
@@ -382,4 +432,161 @@
   width: 22px !important;
   height: 22px !important;
   color: var(--text-color) !important;
+}
+
+/* Date Range Filter Container */
+.date-filter-container {
+  margin-bottom: var(--spacing-md);
+  background: var(--card-background);
+  padding: var(--spacing-md);
+  border-radius: var(--border-radius-lg);
+  border: 1px solid var(--border-color);
+}
+
+.date-range-form {
+  width: 100%;
+}
+
+.date-range-inputs {
+  display: grid;
+  grid-template-columns: auto auto minmax(100px, auto) 1fr;
+  grid-gap: var(--spacing-md);
+  align-items: center;
+}
+
+/* Thêm container để chứa nút Clear Filter và căn phải */
+.filter-btn-container {
+  grid-column: 3;
+  display: flex;
+  justify-content: flex-start;
+}
+
+.clear-filter-btn-container {
+  grid-column: 4;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.date-input-group {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.date-input-group label {
+  color: var(--text-color);
+  font-size: var(--font-size-xs);
+  white-space: nowrap;
+}
+
+.date-input {
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-md);
+  background: var(--background-color);
+  color: var(--text-color);
+  font-size: var(--font-size-xs);
+  min-width: 130px;
+  height: 36px;
+}
+
+.date-input:focus {
+  outline: none;
+  border-color: var(--text-color);
+  box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.1);
+}
+
+.filter-btn {
+  background-color: var(--text-color);
+  color: var(--background-color);
+  border: none;
+  border-radius: var(--border-radius-md);
+  padding: var(--spacing-xs) var(--spacing-md);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-xs);
+  white-space: nowrap;
+  min-width: 120px;
+}
+
+.filter-icon, .clear-icon {
+  width: var(--icon-size-sm);
+  height: var(--icon-size-sm);
+}
+
+.filter-btn:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+.filter-btn:active {
+  transform: translateY(0);
+}
+
+.clear-filter-btn {
+  background-color: transparent;
+  color: var(--text-color);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-md);
+  padding: var(--spacing-xs) var(--spacing-md);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-xs);
+  white-space: nowrap;
+  min-width: 120px;
+}
+
+.clear-filter-btn:hover {
+  background-color: var(--hover-background);
+  transform: translateY(-1px);
+}
+
+.clear-filter-btn:active {
+  transform: translateY(0);
+}
+
+.no-orders-message {
+  text-align: center;
+  padding: var(--spacing-lg) !important;
+  color: var(--text-color);
+  opacity: 0.7;
+  font-style: italic;
+}
+
+/* Responsive styles for date filter */
+@media (max-width: 768px) {
+  .date-range-inputs {
+    grid-template-columns: 1fr;
+    grid-gap: var(--spacing-sm);
+  }
+  
+  .filter-btn-container,
+  .clear-filter-btn-container {
+    grid-column: 1;
+    justify-content: center;
+  }
+  
+  .date-input-group {
+    width: 100%;
+  }
+  
+  .date-input {
+    width: 100%;
+  }
+  
+  .filter-btn, .clear-filter-btn {
+    width: 100%;
+  }
 } 

@@ -3,6 +3,7 @@ import { useSearchParams, useLocation, useNavigate } from 'react-router-dom';
 import { PlusIcon, PencilIcon, TrashIcon, StarIcon, ChevronUpIcon, ChevronDownIcon, MagnifyingGlassIcon, DocumentDuplicateIcon } from '@heroicons/react/24/outline';
 import { productService, categoryService, storeService, toastService } from '../../services';
 import Pagination from '../common/Pagination';
+import Modal from '../common/Modal';
 import './ProductList.css';
 
 const ProductList = () => {
@@ -96,7 +97,7 @@ const ProductList = () => {
     
     useEffect(() => {
         fetchProducts();
-    }, [pagination.pageIndex, pagination.pageSize, selectedCategoryId, selectedStoreId]);
+    }, [pagination.pageIndex, pagination.pageSize, selectedCategoryId, selectedStoreId, sortConfig.key, sortConfig.direction]);
 
     // Separate useEffect to handle search
     useEffect(() => {
@@ -181,7 +182,9 @@ const ProductList = () => {
                 response = await productService.searchProducts(
                     searchTerm,
                     pagination.pageIndex,
-                    pagination.pageSize
+                    pagination.pageSize,
+                    sortConfig.key,
+                    sortConfig.direction
                 );
                 
                 // Only reset the flag if this was called from the search useEffect
@@ -199,7 +202,9 @@ const ProductList = () => {
                 const categoryResponse = await productService.getPaginatedProductsByCategory(
                     selectedCategoryId,
                     1, // Luôn bắt đầu từ trang 1 để đảm bảo lấy tất cả
-                    1000 // Lấy số lượng lớn để đảm bảo lấy được tất cả (giả định không quá 1000 sản phẩm)
+                    1000, // Lấy số lượng lớn để đảm bảo lấy được tất cả (giả định không quá 1000 sản phẩm)
+                    sortConfig.key,
+                    sortConfig.direction
                 );
                 
                 // Lọc thủ công theo store
@@ -235,7 +240,9 @@ const ProductList = () => {
                 response = await productService.getPaginatedProductsByCategory(
                     selectedCategoryId,
                     pagination.pageIndex,
-                    pagination.pageSize
+                    pagination.pageSize,
+                    sortConfig.key,
+                    sortConfig.direction
                 );
             } else if (selectedStoreId !== 'all') {
                 // Chỉ lọc theo cửa hàng
@@ -244,7 +251,9 @@ const ProductList = () => {
                 // Lấy tất cả sản phẩm rồi lọc thủ công
                 const allProductsResponse = await productService.getPaginatedProducts(
                     1, // Luôn bắt đầu từ trang 1 để đảm bảo lấy tất cả
-                    1000 // Lấy số lượng lớn để đảm bảo lấy được tất cả (giả định không quá 1000 sản phẩm)
+                    1000, // Lấy số lượng lớn để đảm bảo lấy được tất cả (giả định không quá 1000 sản phẩm)
+                    sortConfig.key,
+                    sortConfig.direction
                 );
                 
                 if (allProductsResponse && allProductsResponse.items) {
@@ -277,7 +286,9 @@ const ProductList = () => {
                 console.log('Fetching all paginated products');
                 response = await productService.getPaginatedProducts(
                     pagination.pageIndex,
-                    pagination.pageSize
+                    pagination.pageSize,
+                    sortConfig.key,
+                    sortConfig.direction
                 );
             }
             
@@ -345,13 +356,17 @@ const ProductList = () => {
             if (!term.trim()) {
                 response = await productService.getPaginatedProducts(
                     1, // always start at page 1 for new search
-                    pagination.pageSize
+                    pagination.pageSize,
+                    sortConfig.key,
+                    sortConfig.direction
                 );
             } else {
                 response = await productService.searchProducts(
                     term,
                     1, // always start at page 1 for new search
-                    pagination.pageSize
+                    pagination.pageSize,
+                    sortConfig.key,
+                    sortConfig.direction
                 );
             }
             
@@ -588,12 +603,34 @@ const ProductList = () => {
         );
     };
 
+    // Function to get display name for sort fields
+    const getSortFieldDisplayName = (key) => {
+        switch(key) {
+            case 'name': return 'Product Name';
+            case 'category': return 'Category';
+            case 'store': return 'Store';
+            case 'description': return 'Description';
+            case 'price': return 'Price';
+            case 'stockquantity': return 'Stock Quantity';
+            case 'rating': return 'Average Rating';
+            case 'reviewscount': return 'Reviews Count';
+            case 'createdat': return 'Created Date';
+            case 'updatedat': return 'Updated Date';
+            default: return key;
+        }
+    };
+
     const handleSort = (key) => {
         let direction = 'asc';
         if (sortConfig.key === key && sortConfig.direction === 'asc') {
             direction = 'desc';
         }
+        
+        // Note: sorting is handled on the server, so we need to fetch data when sort changes
+        console.log(`Sorting by ${key} ${direction} - sending request to server`);
+        
         setSortConfig({ key, direction });
+        // fetchProducts will be called automatically through useEffect
     };
 
     const renderSortIcon = (key) => {
@@ -714,6 +751,13 @@ const ProductList = () => {
                 </div>
             </div>
             
+            {/* Show current sorting status */}
+            {sortConfig.key && (
+                <div className="sort-status">
+                    <p>Sorting by <strong>{getSortFieldDisplayName(sortConfig.key)}</strong> ({sortConfig.direction === 'asc' ? 'ascending' : 'descending'}) - Processing on server</p>
+                </div>
+            )}
+            
             <div className="products-table-container">
                 <table className="products-table">
                     <thead>
@@ -732,11 +776,11 @@ const ProductList = () => {
                             <th onClick={() => handleSort('name')} className="sortable">
                                 Product Name {renderSortIcon('name')}
                             </th>
-                            <th onClick={() => handleSort('categoryId')} className="sortable">
-                                Category {renderSortIcon('categoryId')}
+                            <th onClick={() => handleSort('category')} className="sortable">
+                                Category {renderSortIcon('category')}
                             </th>
-                            <th onClick={() => handleSort('storeId')} className="sortable">
-                                Store {renderSortIcon('storeId')}
+                            <th onClick={() => handleSort('store')} className="sortable">
+                                Store {renderSortIcon('store')}
                             </th>
                             <th onClick={() => handleSort('description')} className="sortable">
                                 Description {renderSortIcon('description')}
@@ -744,23 +788,23 @@ const ProductList = () => {
                             <th onClick={() => handleSort('price')} className="sortable">
                                 Price {renderSortIcon('price')}
                             </th>
-                            <th onClick={() => handleSort('stockQuantity')} className="sortable">
-                                Stock Quantity {renderSortIcon('stockQuantity')}
+                            <th onClick={() => handleSort('stockquantity')} className="sortable">
+                                Stock Quantity {renderSortIcon('stockquantity')}
                             </th>
                             <th onClick={() => handleSort('rating')} className="sortable">
                                 Rating {renderSortIcon('rating')}
                             </th>
-                            <th onClick={() => handleSort('createdAt')} className="sortable">
-                                Created {renderSortIcon('createdAt')}
+                            <th onClick={() => handleSort('createdat')} className="sortable">
+                                Created {renderSortIcon('createdat')}
                             </th>
-                            <th onClick={() => handleSort('updatedAt')} className="sortable">
-                                Updated {renderSortIcon('updatedAt')}
+                            <th onClick={() => handleSort('updatedat')} className="sortable">
+                                Updated {renderSortIcon('updatedat')}
                             </th>
                             <th>Action</th>
                         </tr>
                     </thead>
                     <tbody>
-                        {productService.getSortedProducts(products, categories, stores, sortConfig).map(product => (
+                        {products.map(product => (
                             <tr 
                                 key={product.id} 
                                 className={`${selectedItems.has(product.id) ? 'selected-row' : ''} ${!selectMode ? 'clickable-row' : ''}`}
@@ -883,128 +927,140 @@ const ProductList = () => {
             </div>
 
             {/* Create product modal */}
-            {isModalOpen && (
-                <div className="modal">
-                    <div className="modal-content">
-                        <h2>Add New Product</h2>
-                        <div className="modal-form-content">
-                          <input
-                              type="text"
-                              placeholder="Product Name"
-                              value={newProduct.name}
-                              onChange={(e) => setNewProduct({ ...newProduct, name: e.target.value })}
-                          />
-                          <textarea
-                              placeholder="Description"
-                              value={newProduct.description}
-                              onChange={(e) => setNewProduct({ ...newProduct, description: e.target.value })}
-                          />
-                          <input
-                              type="number"
-                              placeholder="Price"
-                              value={newProduct.price}
-                              onChange={(e) => setNewProduct({ ...newProduct, price: parseFloat(e.target.value) })}
-                          />
-                          <input
-                              type="number"
-                              placeholder="Stock Quantity"
-                              value={newProduct.stockQuantity}
-                              onChange={(e) => setNewProduct({ ...newProduct, stockQuantity: parseInt(e.target.value) })}
-                          />
-                          <input
-                              type="text"
-                              placeholder="Image URL"
-                              value={newProduct.imageUrl}
-                              onChange={(e) => setNewProduct({ ...newProduct, imageUrl: e.target.value })}
-                          />
-                          <select
-                              value={newProduct.categoryId}
-                              onChange={(e) => setNewProduct({ ...newProduct, categoryId: e.target.value })}
-                          >
-                              <option value="">Select Category</option>
-                              {categories.map(category => (
-                                  <option key={category.id} value={category.id}>{category.name}</option>
-                              ))}
-                          </select>
-                          <select
-                              value={newProduct.storeId}
-                              onChange={(e) => setNewProduct({ ...newProduct, storeId: e.target.value })}
-                          >
-                              <option value="">Select Store</option>
-                              {stores.map(store => (
-                                  <option key={store.id} value={store.id}>{store.name}</option>
-                              ))}
-                          </select>
+            <Modal
+                isOpen={isModalOpen}
+                onClose={() => setIsModalOpen(false)}
+                title="Add New Product"
+                footer={
+                    <>
+                        <button className="modal-cancel-button" onClick={() => setIsModalOpen(false)}>Cancel</button>
+                        <button className="modal-confirm-button" onClick={handleCreateProduct}>Create</button>
+                    </>
+                }
+            >
+                <div className="product-form">
+                        <input
+                            type="text"
+                            placeholder="Product Name"
+                            value={newProduct.name}
+                            onChange={(e) => setNewProduct({ ...newProduct, name: e.target.value })}
+                        />
+                        <textarea
+                            placeholder="Description"
+                            value={newProduct.description}
+                            onChange={(e) => setNewProduct({ ...newProduct, description: e.target.value })}
+                        />
+                        <input
+                            type="number"
+                            placeholder="Price"
+                            value={newProduct.price}
+                            onChange={(e) => setNewProduct({ ...newProduct, price: parseFloat(e.target.value) })}
+                        />
+                        <input
+                            type="number"
+                            placeholder="Stock Quantity"
+                            value={newProduct.stockQuantity}
+                            onChange={(e) => setNewProduct({ ...newProduct, stockQuantity: parseInt(e.target.value) })}
+                        />
+                        <input
+                            type="text"
+                            placeholder="Image URL"
+                            value={newProduct.imageUrl}
+                            onChange={(e) => setNewProduct({ ...newProduct, imageUrl: e.target.value })}
+                        />
+                        <select
+                            value={newProduct.categoryId}
+                            onChange={(e) => setNewProduct({ ...newProduct, categoryId: e.target.value })}
+                        >
+                            <option value="">Select Category</option>
+                            {categories.map(category => (
+                                <option key={category.id} value={category.id}>{category.name}</option>
+                            ))}
+                        </select>
+                        <select
+                            value={newProduct.storeId}
+                            onChange={(e) => setNewProduct({ ...newProduct, storeId: e.target.value })}
+                        >
+                            <option value="">Select Store</option>
+                            {stores.map(store => (
+                                <option key={store.id} value={store.id}>{store.name}</option>
+                            ))}
+                        </select>
                         </div>
-                        <div className="modal-actions">
-                            <button onClick={() => setIsModalOpen(false)}>Cancel</button>
-                            <button onClick={handleCreateProduct}>Create</button>
-                        </div>
-                    </div>
-                </div>
-            )}
+            </Modal>
 
             {/* Edit product modal */}
-            {isEditModalOpen && selectedProduct && (
-                <div className="modal">
-                    <div className="modal-content">
-                        <h2>Edit Product</h2>
-                        <div className="modal-form-content">
-                          <input
-                              type="text"
-                              placeholder="Product Name"
-                              value={selectedProduct.name}
-                              onChange={(e) => setSelectedProduct({ ...selectedProduct, name: e.target.value })}
-                          />
-                          <textarea
-                              placeholder="Description"
-                              value={selectedProduct.description}
-                              onChange={(e) => setSelectedProduct({ ...selectedProduct, description: e.target.value })}
-                          />
-                          <input
-                              type="number"
-                              placeholder="Price"
-                              value={selectedProduct.price}
-                              onChange={(e) => setSelectedProduct({ ...selectedProduct, price: parseFloat(e.target.value) })}
-                          />
-                          <input
-                              type="number"
-                              placeholder="Stock Quantity"
-                              value={selectedProduct.stockQuantity}
-                              onChange={(e) => setSelectedProduct({ ...selectedProduct, stockQuantity: parseInt(e.target.value) })}
-                          />
-                          <input
-                              type="text"
-                              placeholder="Image URL"
-                              value={selectedProduct.imageUrl}
-                              onChange={(e) => setSelectedProduct({ ...selectedProduct, imageUrl: e.target.value })}
-                          />
-                          <select
-                              value={selectedProduct.categoryId}
-                              onChange={(e) => setSelectedProduct({ ...selectedProduct, categoryId: e.target.value })}
-                          >
-                              <option value="">Select Category</option>
-                              {categories.map(category => (
-                                  <option key={category.id} value={category.id}>{category.name}</option>
-                              ))}
-                          </select>
-                          <select
-                              value={selectedProduct.storeId}
-                              onChange={(e) => setSelectedProduct({ ...selectedProduct, storeId: e.target.value })}
-                          >
-                              <option value="">Select Store</option>
-                              {stores.map(store => (
-                                  <option key={store.id} value={store.id}>{store.name}</option>
-                              ))}
-                          </select>
-                        </div>
-                        <div className="modal-actions">
-                            <button onClick={() => setIsEditModalOpen(false)}>Cancel</button>
-                            <button onClick={() => handleUpdateProduct(selectedProduct.id, selectedProduct)}>Save</button>
-                        </div>
-                    </div>
+            <Modal
+                isOpen={isEditModalOpen && !!selectedProduct}
+                onClose={() => setIsEditModalOpen(false)}
+                title="Edit Product"
+                footer={
+                    <>
+                        <button className="modal-cancel-button" onClick={() => setIsEditModalOpen(false)}>Cancel</button>
+                        <button 
+                            className="modal-confirm-button" 
+                            onClick={() => {
+                                handleUpdateProduct(selectedProduct.id, selectedProduct);
+                                setIsEditModalOpen(false);
+                            }}
+                        >
+                            Update
+                        </button>
+                    </>
+                }
+            >
+                {selectedProduct && (
+                    <div className="product-form">
+                        <input
+                            type="text"
+                            placeholder="Product Name"
+                            value={selectedProduct.name}
+                            onChange={(e) => setSelectedProduct({ ...selectedProduct, name: e.target.value })}
+                        />
+                        <textarea
+                            placeholder="Description"
+                            value={selectedProduct.description}
+                            onChange={(e) => setSelectedProduct({ ...selectedProduct, description: e.target.value })}
+                        />
+                        <input
+                            type="number"
+                            placeholder="Price"
+                            value={selectedProduct.price}
+                            onChange={(e) => setSelectedProduct({ ...selectedProduct, price: parseFloat(e.target.value) })}
+                        />
+                        <input
+                            type="number"
+                            placeholder="Stock Quantity"
+                            value={selectedProduct.stockQuantity}
+                            onChange={(e) => setSelectedProduct({ ...selectedProduct, stockQuantity: parseInt(e.target.value) })}
+                        />
+                        <input
+                            type="text"
+                            placeholder="Image URL"
+                            value={selectedProduct.imageUrl}
+                            onChange={(e) => setSelectedProduct({ ...selectedProduct, imageUrl: e.target.value })}
+                        />
+                        <select
+                            value={selectedProduct.categoryId}
+                            onChange={(e) => setSelectedProduct({ ...selectedProduct, categoryId: e.target.value })}
+                        >
+                            <option value="">Select Category</option>
+                            {categories.map(category => (
+                                <option key={category.id} value={category.id}>{category.name}</option>
+                            ))}
+                        </select>
+                        <select
+                            value={selectedProduct.storeId}
+                            onChange={(e) => setSelectedProduct({ ...selectedProduct, storeId: e.target.value })}
+                        >
+                            <option value="">Select Store</option>
+                            {stores.map(store => (
+                                <option key={store.id} value={store.id}>{store.name}</option>
+                            ))}
+                        </select>
                 </div>
             )}
+            </Modal>
         </div>
     );
 };

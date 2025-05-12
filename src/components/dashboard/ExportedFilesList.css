@@ -1,0 +1,194 @@
+.exported-files-modal .modal-body {
+  padding: var(--spacing-md);
+}
+
+.exported-files-content {
+  width: 100%;
+}
+
+.no-files-message {
+  text-align: center;
+  padding: var(--spacing-lg);
+  color: var(--text-color);
+  opacity: 0.7;
+}
+
+.no-files-message p {
+  margin: var(--spacing-xs) 0;
+}
+
+.files-count {
+  font-size: var(--font-size-xs);
+  color: var(--text-color);
+  opacity: 0.7;
+  margin: 0 0 var(--spacing-sm) 0;
+}
+
+.files-table-container {
+  width: 100%;
+  overflow-x: auto;
+  background: var(--card-background);
+  border-radius: var(--border-radius-md);
+  border: 1px solid var(--border-color);
+  margin-bottom: var(--spacing-md);
+}
+
+.files-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.files-table th {
+  background: var(--background-color);
+  color: var(--text-color);
+  font-weight: var(--font-weight-semibold);
+  padding: var(--spacing-sm);
+  text-align: left;
+  border-bottom: 1px solid var(--border-color);
+  font-size: var(--font-size-xs);
+}
+
+.files-table th.file-name-column,
+.files-table th.file-date-column {
+  cursor: pointer;
+}
+
+.files-table th.file-name-column:hover,
+.files-table th.file-date-column:hover {
+  background-color: var(--hover-background);
+}
+
+.files-table td {
+  padding: var(--spacing-sm);
+  border-bottom: 1px solid var(--border-color);
+  color: var(--text-color);
+  font-size: var(--font-size-xs);
+}
+
+.files-table tr:hover {
+  background: var(--hover-background);
+}
+
+.file-type-column {
+  width: 50px;
+  text-align: center;
+}
+
+.file-name-column {
+  min-width: 150px;
+  max-width: 250px;
+  word-break: break-all;
+}
+
+.file-data-column {
+  min-width: 100px;
+}
+
+.file-size-column {
+  width: 80px;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.file-date-column {
+  min-width: 150px;
+  white-space: nowrap;
+}
+
+.file-actions-column {
+  width: 100px;
+}
+
+.file-actions {
+  display: flex;
+  gap: var(--spacing-xs);
+  justify-content: center;
+}
+
+.file-icon {
+  width: 24px;
+  height: 24px;
+  color: var(--text-color);
+}
+
+.file-icon.excel {
+  color: #1D6F42; /* Excel green */
+}
+
+.file-icon.pdf {
+  color: #F40F02; /* PDF red */
+}
+
+.file-icon.zip {
+  color: #F0AD4E; /* Archive yellow/orange */
+}
+
+.download-file-button,
+.delete-file-button {
+  background: transparent;
+  border: none;
+  padding: var(--spacing-xs);
+  border-radius: var(--border-radius-sm);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition-fast);
+}
+
+.download-file-button {
+  color: var(--text-color);
+}
+
+.delete-file-button {
+  color: var(--text-color);
+}
+
+.download-file-button:hover,
+.delete-file-button:hover {
+  background-color: var(--hover-background);
+}
+
+.download-file-button svg,
+.delete-file-button svg {
+  width: 18px;
+  height: 18px;
+}
+
+.delete-file-button:hover {
+  color: #dc3545; /* Red for delete */
+}
+
+.download-file-button:hover {
+  color: var(--text-color);
+  opacity: 0.8;
+}
+
+.files-note {
+  font-size: var(--font-size-xs);
+  color: var(--text-color);
+  opacity: 0.6;
+  margin-top: var(--spacing-sm);
+  text-align: center;
+}
+
+.clear-files-button {
+  background-color: transparent;
+  border: 1px solid var(--border-color);
+  color: #dc3545; /* Red for danger */
+  padding: 6px 12px;
+  border-radius: var(--border-radius-md);
+  font-size: var(--font-size-xs);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.clear-files-button:hover:not(:disabled) {
+  background-color: rgba(220, 53, 69, 0.1); /* Light red background */
+  border-color: #dc3545;
+}
+
+.clear-files-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+} 

@@ -4,159 +4,53 @@ class DashboardService {
     // Thêm constants cho date range
     MIN_DATE = new Date('2025-03-01');
     
-    async getDashboardData() {
+    async getDashboardData(dateRange) {
         try {
-            const [productsRes, ordersRes, storesRes, categoriesRes] = await Promise.all([
-                axios.get("/Product"),
-                axios.get("/Order"), 
-                axios.get("/Store"),
-                axios.get("/Category")
+            const params = this.buildDateRangeParams(dateRange);
+            
+            const [
+                statsRes, 
+                topStoresRes, 
+                topProductsRes, 
+                topCategoriesRes,
+                ordersByDateRes,
+                revenueByDateRes
+            ] = await Promise.all([
+                axios.get("/Dashboard/stats", { params }),
+                axios.get("/Dashboard/top-stores", { params }),
+                axios.get("/Dashboard/top-products", { params }),
+                axios.get("/Dashboard/top-categories", { params }),
+                axios.get("/Dashboard/orders-by-date", { params: {
+                    startDate: dateRange.startDate,
+                    endDate: dateRange.endDate
+                }}),
+                axios.get("/Dashboard/revenue-by-date", { params: {
+                    startDate: dateRange.startDate,
+                    endDate: dateRange.endDate
+                }})
             ]);
 
             return {
-                products: productsRes.data,
-                orders: ordersRes.data,
-                stores: storesRes.data,
-                categories: categoriesRes.data
+                stats: statsRes.data,
+                topStores: topStoresRes.data,
+                topProducts: topProductsRes.data, 
+                topCategories: topCategoriesRes.data,
+                ordersByDate: ordersByDateRes.data,
+                revenueByDate: revenueByDateRes.data
             };
         } catch (error) {
+            console.error("Error in getDashboardData:", error);
             throw error;
         }
     }
-
-    calculateStats(products, orders) {
+    
+    buildDateRangeParams(dateRange) {
+        if (!dateRange) return {};
+        
         return {
-            totalProducts: {
-                count: products.length,
-                quantity: products.reduce((sum, p) => sum + p.stockQuantity, 0)
-            },
-            totalValue: products.reduce((sum, p) => sum + p.price * p.stockQuantity, 0),
-            totalCustomers: [...new Set(orders.map(o => o.customerId))].length,
-            totalRevenue: orders.reduce((sum, order) => {
-                const orderTotal = order.orderItems.reduce((itemSum, item) => {
-                    return itemSum + item.price * item.quantity;
-                }, 0);
-                return sum + orderTotal;
-            }, 0)
+            startDate: dateRange.startDate,
+            endDate: dateRange.endDate
         };
-    }
-
-    getTopStores(stores, orders, products, limit = 10) {
-        return stores
-            .map(store => ({
-                ...store,
-                revenue: orders
-                    .filter(o => o.status === 3 && o.paymentStatus === 1)
-                    .reduce((sum, order) => {
-                        const storeOrderItems = order.orderItems.filter(
-                            item => products.find(p => p.id === item.productId)?.storeId === store.id
-                        );
-                        const orderTotal = storeOrderItems.reduce((itemSum, item) => {
-                            return itemSum + item.price * item.quantity;
-                        }, 0);
-                        return sum + orderTotal;
-                    }, 0)
-            }))
-            .sort((a, b) => b.revenue - a.revenue)
-            .slice(0, limit);
-    }
-
-    getTopProducts(products, orders, limit = 10) {
-        return products
-            .map(product => ({
-                ...product,
-                revenue: orders
-                    .flatMap(o => o.orderItems)
-                    .filter(item => item.productId === product.id)
-                    .reduce((sum, item) => sum + item.price * item.quantity, 0)
-            }))
-            .sort((a, b) => b.revenue - a.revenue)
-            .slice(0, limit);
-    }
-
-    getTopCategories(categories, orders, products, limit = 10) {
-        return categories
-            .map(category => ({
-                ...category,
-                soldQuantity: orders
-                    .flatMap(o => o.orderItems)
-                    .filter(item => 
-                        products.find(p => p.id === item.productId)?.categoryId === category.id
-                    )
-                    .reduce((sum, item) => sum + item.quantity, 0)
-            }))
-            .sort((a, b) => b.soldQuantity - a.soldQuantity)
-            .slice(0, limit);
-    }
-
-    getOrdersByDateRange(orders, startDate, endDate) {
-        // Đảm bảo startDate và endDate là đối tượng Date
-        const start = new Date(startDate);
-        const end = new Date(endDate);
-        
-        // Tạo mảng các ngày trong khoảng
-        const dates = this.generateDateRange(start, end);
-        
-        // Nhóm đơn hàng theo ngày
-        const ordersByDate = dates.map(date => {
-            const dateStr = date.toISOString().split('T')[0];
-            const count = orders.filter(order => {
-                const orderDate = new Date(order.createdAt).toISOString().split('T')[0];
-                return orderDate === dateStr;
-            }).length;
-            
-            return {
-                date: dateStr,
-                count
-            };
-        });
-        
-        return ordersByDate;
-    }
-
-    getRevenueByDateRange(orders, startDate, endDate) {
-        // Đảm bảo startDate và endDate là đối tượng Date
-        const start = new Date(startDate);
-        const end = new Date(endDate);
-        
-        // Tạo mảng các ngày trong khoảng
-        const dates = this.generateDateRange(start, end);
-        
-        // Tính doanh thu theo ngày
-        const revenueByDate = dates.map(date => {
-            const dateStr = date.toISOString().split('T')[0];
-            
-            const dailyRevenue = orders
-                .filter(order => {
-                    const orderDate = new Date(order.createdAt).toISOString().split('T')[0];
-                    return orderDate === dateStr;
-                })
-                .reduce((total, order) => {
-                    const orderTotal = order.orderItems.reduce((sum, item) => {
-                        return sum + (item.price * item.quantity);
-                    }, 0);
-                    return total + orderTotal;
-                }, 0);
-            
-            return {
-                date: dateStr,
-                revenue: dailyRevenue
-            };
-        });
-        
-        return revenueByDate;
-    }
-
-    generateDateRange(startDate, endDate) {
-        const dates = [];
-        let currentDate = new Date(startDate);
-        
-        while (currentDate <= endDate) {
-            dates.push(new Date(currentDate));
-            currentDate.setDate(currentDate.getDate() + 1);
-        }
-        
-        return dates;
     }
 
     validateDateRange(startDate, endDate) {
@@ -202,6 +96,35 @@ class DashboardService {
 
     prepareCombinedChartData(ordersByDate, revenueByDate, isDarkMode) {
         const colors = this.getChartColors(isDarkMode);
+        
+        // Kiểm tra nếu dữ liệu rỗng hoặc không hợp lệ
+        if (!ordersByDate || !revenueByDate || !ordersByDate.length || !revenueByDate.length) {
+            return {
+                labels: [],
+                datasets: [
+                    {
+                        type: 'bar',
+                        label: 'Number of Orders',
+                        data: [],
+                        backgroundColor: colors.barBackgroundColor,
+                        borderColor: colors.barBorderColor,
+                        borderWidth: 2,
+                        yAxisID: 'y'
+                    },
+                    {
+                        type: 'line',
+                        label: 'Revenue (VND)',
+                        data: [],
+                        backgroundColor: colors.lineBackgroundColor,
+                        borderColor: colors.lineBorderColor,
+                        borderWidth: 2,
+                        tension: 0.3,
+                        fill: true,
+                        yAxisID: 'y1',
+                    },
+                ],
+            };
+        }
         
         // Tạo nhãn chung cho trục x từ dữ liệu ngày
         const labels = ordersByDate.map(item => {
@@ -318,6 +241,31 @@ class DashboardService {
                 }
             },
         };
+    }
+
+    // Phương thức mới để chuẩn bị tham số URL cho trang Orders
+    prepareOrdersFilterParams(dateRange) {
+        // Kiểm tra xem dateRange có hợp lệ không
+        if (!dateRange || !dateRange.startDate || !dateRange.endDate) {
+            return '';
+        }
+
+        try {
+            // Xác thực range
+            this.validateDateRange(dateRange.startDate, dateRange.endDate);
+            
+            // Tạo chuỗi tham số
+            const params = new URLSearchParams();
+            params.set('fromDate', dateRange.startDate);
+            params.set('toDate', dateRange.endDate);
+            params.set('sortBy', 'createdAt');
+            params.set('sortDir', 'desc');
+            
+            return params.toString();
+        } catch (error) {
+            console.error('Error preparing orders filter params:', error);
+            return '';
+        }
     }
 }
 

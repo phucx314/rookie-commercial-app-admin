@@ -10,37 +10,59 @@ class ProductService {
         }
     }
 
-    async getPaginatedProducts(pageIndex = 1, pageSize = 10) {
+    async getPaginatedProducts(pageIndex = 1, pageSize = 10, sortBy = null, sortDirection = 'asc') {
         try {
-            const response = await axios.get('/Product/paged', { 
-                params: { pageIndex, pageSize } 
-            });
+            const params = {
+                pageIndex,
+                pageSize
+            };
+
+            // Thêm các tham số sắp xếp nếu được cung cấp
+            if (sortBy) {
+                params.sortBy = sortBy;
+                params.sortDirection = sortDirection;
+            }
+
+            const response = await axios.get('/Product/paged', { params });
             return response.data;
         } catch (error) {
             throw error;
         }
     }
 
-    async getPaginatedProductsByCategory(categoryId, pageIndex = 1, pageSize = 10) {
+    async getPaginatedProductsByCategory(categoryId, pageIndex = 1, pageSize = 10, sortBy = null, sortDirection = 'asc') {
         try {
-            const response = await axios.get(`/Product/category/${categoryId}/paged`, { 
-                params: { pageIndex, pageSize } 
-            });
+            const params = {
+                pageIndex,
+                pageSize
+            };
+
+            // Thêm các tham số sắp xếp nếu được cung cấp
+            if (sortBy) {
+                params.sortBy = sortBy;
+                params.sortDirection = sortDirection;
+            }
+
+            const response = await axios.get(`/Product/category/${categoryId}/paged`, { params });
             return response.data;
         } catch (error) {
             throw error;
         }
     }
 
-    async getPaginatedProductsByStore(storeId, pageIndex = 1, pageSize = 10) {
+    async getPaginatedProductsByStore(storeId, pageIndex = 1, pageSize = 10, sortBy = 'name', sortDirection = 'asc') {
         try {
-            const response = await axios.get('/Product/paged', { 
-                params: { 
+            console.log('Fetching paginated products for store:', storeId);
+            const params = { 
                     pageIndex, 
                     pageSize,
-                    storeId
-                } 
-            });
+                    storeId,
+                    sortBy,
+                    sortDirection
+            };
+
+            const response = await axios.get('/Product/paged', { params });
+            console.log('Store products API response:', response.data);
             return response.data;
         } catch (error) {
             console.error('Error fetching products by store:', error);
@@ -48,13 +70,15 @@ class ProductService {
         }
     }
 
-    async getPaginatedProductsByCategoryAndStore(categoryId, storeId, pageIndex = 1, pageSize = 10) {
+    async getPaginatedProductsByCategoryAndStore(categoryId, storeId, pageIndex = 1, pageSize = 10, sortBy = 'name', sortDirection = 'asc') {
         try {
             const response = await axios.get(`/Product/category/${categoryId}/paged`, { 
                 params: { 
                     pageIndex, 
                     pageSize,
-                    storeId
+                    storeId,
+                    sortBy,
+                    sortDirection
                 } 
             });
             return response.data;
@@ -64,13 +88,48 @@ class ProductService {
         }
     }
 
-    async searchProducts(searchTerm, pageIndex = 1, pageSize = 10) {
+    async searchProducts(searchTerm, pageIndex = 1, pageSize = 10, sortBy = null, sortDirection = 'asc') {
         try {
-            const response = await axios.get('/Product/search', { 
-                params: { searchTerm, pageIndex, pageSize } 
-            });
+            const params = { 
+                searchTerm, 
+                pageIndex, 
+                pageSize 
+            };
+
+            // Thêm các tham số sắp xếp nếu được cung cấp
+            if (sortBy) {
+                params.sortBy = sortBy;
+                params.sortDirection = sortDirection;
+            }
+
+            const response = await axios.get('/Product/search', { params });
             return response.data;
         } catch (error) {
+            throw error;
+        }
+    }
+
+    async searchProductsByStore(storeId, searchTerm, pageIndex = 1, pageSize = 10, sortBy = null, sortDirection = 'asc') {
+        try {
+            console.log('Calling API with storeId:', storeId, 'searchTerm:', searchTerm);
+            const params = { 
+                searchTerm, 
+                pageIndex, 
+                pageSize, 
+                storeId 
+            };
+
+            // Thêm các tham số sắp xếp nếu được cung cấp
+            if (sortBy) {
+                params.sortBy = sortBy;
+                params.sortDirection = sortDirection;
+            }
+
+            const response = await axios.get('/Product/search', { params });
+            console.log('API response for store products:', response.data);
+            return response.data;
+        } catch (error) {
+            console.error('Error searching products by store:', error);
             throw error;
         }
     }
@@ -198,6 +257,28 @@ class ProductService {
             if (aValue > bValue) return sortConfig.direction === 'asc' ? 1 : -1;
             return 0;
         });
+    }
+
+    // Lấy danh sách các tùy chọn sắp xếp
+    async getSortOptions() {
+        try {
+            const response = await axios.get('/Product/sort-options');
+            return response.data;
+        } catch (error) {
+            console.error('Error fetching sort options:', error);
+            // Trả về danh sách mặc định nếu API lỗi
+            return [
+                { field: 'name', displayName: 'Name' },
+                { field: 'price', displayName: 'Price' },
+                { field: 'description', displayName: 'Description' },
+                { field: 'stockquantity', displayName: 'Stock Quantity' },
+                { field: 'category', displayName: 'Category' },
+                { field: 'store', displayName: 'Store' },
+                { field: 'reviewscount', displayName: 'Reviews Count' },
+                { field: 'createdat', displayName: 'Created Date' },
+                { field: 'updatedat', displayName: 'Updated Date' }
+            ];
+        }
     }
 }
 

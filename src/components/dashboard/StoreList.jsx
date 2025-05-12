@@ -113,9 +113,9 @@ const StoreList = () => {
     useEffect(() => {
         if (shouldApplySearch) {
             // Store the current search term for comparison
-            setCurrentSearchTerm(searchTerm);
+            setCurrentSearchTerm(searchTerm || '');
             // Only fetch if this is from URL param initialization, not after searchStores is called
-            if (!searchTerm || currentSearchTerm !== searchTerm) {
+            if (currentSearchTerm !== searchTerm) {
                 fetchPaginatedStores(true);
             } else {
                 // Just reset the flag without triggering another fetch
@@ -143,7 +143,9 @@ const StoreList = () => {
                     searchTerm,
                     pagination.pageIndex,
                     pagination.pageSize,
-                    activeFilter
+                    activeFilter,
+                    'Name', // SortBy parameter
+                    'asc'   // SortDirection parameter
                 );
                 
                 // Only reset the flag if this was called from the search useEffect
@@ -156,9 +158,12 @@ const StoreList = () => {
             } else {
                 console.log(`Loading stores with filter: ${activeFilter}`);
                 data = await storeService.getPaginatedStores(
-                    pagination.pageIndex,
-                    pagination.pageSize,
-                    activeFilter
+                    pagination.pageIndex || 1,
+                    pagination.pageSize || 12,
+                    activeFilter || 'all',
+                    '', // Truyền chuỗi rỗng thay vì undefined
+                    'Name', // SortBy parameter
+                    'asc'   // SortDirection parameter
                 );
             }
             
@@ -205,19 +210,27 @@ const StoreList = () => {
             console.log(`Directly searching stores with term: "${term}"`);
             
             let response;
+            // Đảm bảo term không bao giờ là null hoặc undefined
+            const searchTermValue = term && term.trim() ? term.trim() : '';
+            
             // Nếu chuỗi tìm kiếm trống, lấy tất cả cửa hàng
-            if (!term.trim()) {
+            if (!searchTermValue) {
                 response = await storeService.getPaginatedStores(
                     1, // Bắt đầu từ trang 1 cho tìm kiếm mới
-                    pagination.pageSize,
-                    activeFilter
+                    pagination.pageSize || 12,
+                    activeFilter || 'all',
+                    '',
+                    'Name', // SortBy parameter
+                    'asc'   // SortDirection parameter
                 );
             } else {
                 response = await storeService.searchStores(
-                    term,
+                    searchTermValue,
                     1, // Bắt đầu từ trang 1 cho tìm kiếm mới
-                    pagination.pageSize,
-                    activeFilter
+                    pagination.pageSize || 12,
+                    activeFilter || 'all',
+                    'Name', // SortBy parameter
+                    'asc'   // SortDirection parameter
                 );
             }
             
@@ -230,7 +243,7 @@ const StoreList = () => {
             });
             
             // Lưu từ khóa tìm kiếm hiện tại để so sánh
-            setCurrentSearchTerm(term);
+            setCurrentSearchTerm(term || '');
             
             // KHÔNG đặt shouldApplySearch = true ở đây để tránh gọi API lần nữa
             // setShouldApplySearch(true);
@@ -710,16 +723,16 @@ const StoreList = () => {
                         <form onSubmit={handleEditSubmit}>
                             <div className="modal-form-content">
                                 <div className="form-layout two-columns">
-                                    <div className="form-group">
-                                        <label>Store Name</label>
-                                        <input
-                                            type="text"
-                                            name="name"
-                                            value={editForm.name}
-                                            onChange={handleEditChange}
-                                            required
-                                        />
-                                    </div>
+                            <div className="form-group">
+                                <label>Store Name</label>
+                                <input
+                                    type="text"
+                                    name="name"
+                                    value={editForm.name}
+                                    onChange={handleEditChange}
+                                    required
+                                />
+                            </div>
                                     <div className="form-group">
                                         <label>Logo URL</label>
                                         <input
@@ -731,44 +744,44 @@ const StoreList = () => {
                                     </div>
                                 </div>
 
-                                <div className="form-group">
-                                    <label>Description</label>
-                                    <textarea
-                                        name="description"
-                                        value={editForm.description}
-                                        onChange={handleEditChange}
-                                    />
-                                </div>
+                            <div className="form-group">
+                                <label>Description</label>
+                                <textarea
+                                    name="description"
+                                    value={editForm.description}
+                                    onChange={handleEditChange}
+                                />
+                            </div>
 
                                 <div className="form-layout two-columns">
-                                    <div className="form-group">
-                                        <label>Address</label>
-                                        <input
-                                            type="text"
-                                            name="address"
-                                            value={editForm.address}
-                                            onChange={handleEditChange}
-                                        />
+                            <div className="form-group">
+                                <label>Address</label>
+                                <input
+                                    type="text"
+                                    name="address"
+                                    value={editForm.address}
+                                    onChange={handleEditChange}
+                                />
+                            </div>
+                            <div className="form-group">
+                                <label>Phone Number</label>
+                                <input
+                                    type="tel"
+                                    name="phoneNumber"
+                                    value={editForm.phoneNumber}
+                                    onChange={handleEditChange}
+                                />
                                     </div>
-                                    <div className="form-group">
-                                        <label>Phone Number</label>
-                                        <input
-                                            type="tel"
-                                            name="phoneNumber"
-                                            value={editForm.phoneNumber}
-                                            onChange={handleEditChange}
-                                        />
-                                    </div>
-                                </div>
-                                <div className="form-group">
-                                    <label>Email</label>
-                                    <input
-                                        type="email"
-                                        name="email"
-                                        value={editForm.email}
-                                        onChange={handleEditChange}
-                                    />
-                                </div>
+                            </div>
+                            <div className="form-group">
+                                <label>Email</label>
+                                <input
+                                    type="email"
+                                    name="email"
+                                    value={editForm.email}
+                                    onChange={handleEditChange}
+                                />
+                            </div>
                             </div>
 
                             <div className="modal-actions">

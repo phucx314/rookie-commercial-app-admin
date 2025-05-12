@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   CurrencyDollarIcon,
   ShoppingBagIcon,
   UserGroupIcon,
   BuildingStorefrontIcon,
+  ArrowDownTrayIcon,
 } from "@heroicons/react/24/outline";
 import {
   Chart as ChartJS,
@@ -15,11 +17,14 @@ import {
   Title,
   Tooltip,
   Legend,
+  Filler,
 } from 'chart.js';
 import { Line } from 'react-chartjs-2';
 import dashboardService from "../../services/dashboard.service";
 import { toastService } from "../../services";
 import { useTheme } from "../../context/ThemeContext";
+import ExportDataModal from "./ExportDataModal";
+import ExportedFilesList from "./ExportedFilesList";
 import "./Dashboard.css";
 
 // Đăng ký các components của Chart.js
@@ -31,16 +36,12 @@ ChartJS.register(
   BarElement,
   Title,
   Tooltip,
-  Legend
+  Legend,
+  Filler
 );
 
 const Dashboard = () => {
-  const [dashboardData, setDashboardData] = useState({
-    products: [],
-    orders: [],
-    stores: [],
-    categories: []
-  });
+  const navigate = useNavigate();
   const [stats, setStats] = useState({});
   const [topStores, setTopStores] = useState([]);
   const [topProducts, setTopProducts] = useState([]);
@@ -55,6 +56,12 @@ const Dashboard = () => {
     endDate: new Date().toISOString().split('T')[0]
   });
   const [dateError, setDateError] = useState('');
+  
+  // Export Data Modal state
+  const [showExportModal, setShowExportModal] = useState(false);
+  
+  // Files list modal state
+  const [showFilesList, setShowFilesList] = useState(false);
 
   useEffect(() => {
     fetchDashboardData();
@@ -62,53 +69,71 @@ const Dashboard = () => {
 
   const fetchDashboardData = async () => {
     try {
-      const data = await dashboardService.getDashboardData();
-      setDashboardData(data);
-
-      const calculatedStats = dashboardService.calculateStats(data.products, data.orders);
-      setStats({
-        totalProducts: {
-          ...calculatedStats.totalProducts,
-          icon: ShoppingBagIcon,
-          label: "Total Products",
-          sublabel: "products / quantity",
-        },
-        totalValue: {
-          value: calculatedStats.totalValue,
-          icon: CurrencyDollarIcon,
-          label: "Total Value",
-          sublabel: "inventory value",
-        },
-        totalCustomers: {
-          count: calculatedStats.totalCustomers,
-          icon: UserGroupIcon,
-          label: "Total Customers",
-          sublabel: "customers who purchased",
-        },
-        totalRevenue: {
-          value: calculatedStats.totalRevenue,
-          icon: BuildingStorefrontIcon,
-          label: "Total Revenue",
-          sublabel: "from all stores",
-        },
-      });
-
-      setTopStores(dashboardService.getTopStores(data.stores, data.orders, data.products));
-      setTopProducts(dashboardService.getTopProducts(data.products, data.orders));
-      setTopCategories(dashboardService.getTopCategories(data.categories, data.orders, data.products));
-
       // Set default date range to last 7 days
       const today = new Date();
       const sevenDaysAgo = new Date(today);
       sevenDaysAgo.setDate(today.getDate() - 7);
       
-      setDateRange({
+      const defaultDateRange = {
         startDate: sevenDaysAgo.toISOString().split('T')[0],
         endDate: today.toISOString().split('T')[0]
-      });
+      };
 
-      // Lấy dữ liệu cho biểu đồ với date range mặc định
-      updateChartData(data.orders, sevenDaysAgo, today);
+      setDateRange(defaultDateRange);
+      
+      // Tạo date range để gửi lên API - thêm +1 ngày cho endDate để bao gồm toàn bộ ngày hiện tại
+      const apiDateRange = {
+        startDate: defaultDateRange.startDate,
+        // Thêm 1 ngày cho endDate để bao gồm cả ngày được chọn
+        endDate: new Date(new Date(defaultDateRange.endDate).setDate(new Date(defaultDateRange.endDate).getDate() + 1))
+          .toISOString().split('T')[0]
+      };
+      
+      // Fetch dashboard data with date range
+      const data = await dashboardService.getDashboardData(apiDateRange);
+      
+      // Lọc bỏ ngày cuối cùng (ngày +1) từ dữ liệu biểu đồ
+      const filteredOrdersByDate = data.ordersByDate ? data.ordersByDate.slice(0, -1) : [];
+      const filteredRevenueByDate = data.revenueByDate ? data.revenueByDate.slice(0, -1) : [];
+      
+      // Set dashboard data directly from the API response
+      setStats({
+        totalProducts: {
+          count: data.stats.productStats.totalCount,
+          quantity: data.stats.productStats.totalQuantity,
+          icon: ShoppingBagIcon,
+          label: "Total Products",
+          sublabel: "products / quantity",
+        },
+        totalValue: {
+          value: data.stats.totalInventoryValue,
+          icon: CurrencyDollarIcon,
+          label: "Total Value",
+          sublabel: "inventory value",
+        },
+        totalCustomers: {
+          count: data.stats.totalCustomers,
+          icon: UserGroupIcon,
+          label: "Total Customers",
+          sublabel: "customers who purchased",
+        },
+        totalRevenue: {
+          value: data.stats.totalRevenue,
+          icon: BuildingStorefrontIcon,
+          label: "Total Revenue",
+          sublabel: "from all stores",
+        },
+      });
+      
+      // Set rankings data
+      setTopStores(data.topStores);
+      setTopProducts(data.topProducts);
+      setTopCategories(data.topCategories);
+      
+      // Set chart data - dùng dữ liệu đã lọc
+      setOrdersByDate(filteredOrdersByDate);
+      setRevenueByDate(filteredRevenueByDate);
+      
     } catch (error) {
       console.error("Error fetching dashboard data:", error);
       toastService.error("Cannot load dashboard data. Please try again later.");
@@ -124,21 +149,91 @@ const Dashboard = () => {
     setDateError('');
   };
 
-  const updateChartData = (orders, startDate, endDate) => {
+  const handleDateRangeSubmit = async (e) => {
+    e.preventDefault();
+    
     try {
-      dashboardService.validateDateRange(startDate, endDate);
-      setOrdersByDate(dashboardService.getOrdersByDateRange(orders, startDate, endDate));
-      setRevenueByDate(dashboardService.getRevenueByDateRange(orders, startDate, endDate));
+      // Validate date range
+      dashboardService.validateDateRange(dateRange.startDate, dateRange.endDate);
+      
+      // Tạo date range để gửi lên API - thêm +1 ngày cho endDate
+      const apiDateRange = {
+        startDate: dateRange.startDate,
+        // Thêm 1 ngày cho endDate để bao gồm cả ngày được chọn
+        endDate: new Date(new Date(dateRange.endDate).setDate(new Date(dateRange.endDate).getDate() + 1))
+          .toISOString().split('T')[0]
+      };
+      
+      // Fetch new data with the selected date range
+      const data = await dashboardService.getDashboardData(apiDateRange);
+      
+      // Lọc bỏ ngày cuối cùng (ngày +1) từ dữ liệu biểu đồ
+      const filteredOrdersByDate = data.ordersByDate ? data.ordersByDate.slice(0, -1) : [];
+      const filteredRevenueByDate = data.revenueByDate ? data.revenueByDate.slice(0, -1) : [];
+      
+      // Update state with new data
+      setStats({
+        totalProducts: {
+          count: data.stats.productStats.totalCount,
+          quantity: data.stats.productStats.totalQuantity,
+          icon: ShoppingBagIcon,
+          label: "Total Products",
+          sublabel: "products / quantity",
+        },
+        totalValue: {
+          value: data.stats.totalInventoryValue,
+          icon: CurrencyDollarIcon,
+          label: "Total Value",
+          sublabel: "inventory value",
+        },
+        totalCustomers: {
+          count: data.stats.totalCustomers,
+          icon: UserGroupIcon,
+          label: "Total Customers",
+          sublabel: "customers who purchased",
+        },
+        totalRevenue: {
+          value: data.stats.totalRevenue,
+          icon: BuildingStorefrontIcon,
+          label: "Total Revenue",
+          sublabel: "from all stores",
+        },
+      });
+      
+      // Update rankings
+      setTopStores(data.topStores);
+      setTopProducts(data.topProducts);
+      setTopCategories(data.topCategories);
+      
+      // Update chart data - dùng dữ liệu đã lọc
+      setOrdersByDate(filteredOrdersByDate);
+      setRevenueByDate(filteredRevenueByDate);
+      
       setDateError('');
     } catch (error) {
       setDateError(error.message);
       toastService.error(error.message);
     }
   };
-
-  const handleDateRangeSubmit = (e) => {
-    e.preventDefault();
-    updateChartData(dashboardData.orders, dateRange.startDate, dateRange.endDate);
+  
+  // Hàm mở modal xuất dữ liệu
+  const handleOpenExportModal = () => {
+    setShowExportModal(true);
+  };
+  
+  // Hàm đóng modal xuất dữ liệu
+  const handleCloseExportModal = () => {
+    setShowExportModal(false);
+  };
+  
+  // Hàm mở modal danh sách file
+  const handleOpenFilesModal = () => {
+    setShowFilesList(true);
+  };
+  
+  // Hàm đóng modal danh sách file
+  const handleCloseFilesModal = () => {
+    setShowFilesList(false);
   };
 
   // Lấy dữ liệu và cấu hình biểu đồ từ service
@@ -147,6 +242,28 @@ const Dashboard = () => {
 
   return (
     <div className="dashboard">
+      {/* Dashboard header with export button */}
+      <div className="dashboard-header">
+        <h1>Dashboard</h1>
+        <div className="dashboard-actions">
+          <button 
+            className="files-list-btn" 
+            onClick={handleOpenFilesModal}
+            title="View Exported Files"
+          >
+            <span>Exported Files</span>
+          </button>
+          <button 
+            className="export-data-btn" 
+            onClick={handleOpenExportModal}
+            title="Export Dashboard Data"
+          >
+            <ArrowDownTrayIcon />
+            <span>Export Data</span>
+          </button>
+        </div>
+      </div>
+      
       {/* Stats Cards */}
       <div className="stats-grid">
         {Object.entries(stats).map(([key, stat]) => (
@@ -212,6 +329,19 @@ const Dashboard = () => {
             <div className="chart-wrapper">
               <Line data={combinedChartData} options={combinedChartOptions} />
             </div>
+            <div className="chart-footer">
+              <button 
+                className="view-orders-btn" 
+                onClick={() => {
+                  // Chuẩn bị tham số lọc theo khoảng thời gian đã chọn
+                  const filterParams = dashboardService.prepareOrdersFilterParams(dateRange);
+                  // Điều hướng đến trang orders với params
+                  navigate(`/orders${filterParams ? '?' + filterParams : ''}`);
+                }}
+              >
+                Detailed Order List
+              </button>
+            </div>
           </div>
         </div>
 
@@ -269,6 +399,25 @@ const Dashboard = () => {
           </div>
         </div>
       </div>
+      
+      {/* Export Data Modal */}
+      <ExportDataModal
+        isOpen={showExportModal}
+        onClose={handleCloseExportModal}
+        stats={stats}
+        topStores={topStores}
+        topProducts={topProducts}
+        topCategories={topCategories}
+        ordersByDate={ordersByDate}
+        revenueByDate={revenueByDate}
+        dashboardDateRange={dateRange}
+      />
+      
+      {/* Exported Files List Modal */}
+      <ExportedFilesList
+        isOpen={showFilesList}
+        onClose={handleCloseFilesModal}
+      />
     </div>
   );
 };

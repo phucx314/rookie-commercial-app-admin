@@ -1,0 +1,602 @@
+.export-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  backdrop-filter: blur(3px);
+}
+
+.export-modal {
+  background-color: var(--card-background);
+  border-radius: var(--border-radius-lg);
+  width: 90%;
+  max-width: 600px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--border-color);
+}
+
+.export-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--spacing-md);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.export-modal-header h2 {
+  margin: 0;
+  font-size: var(--font-size-lg);
+  color: var(--text-color);
+}
+
+.close-button {
+  background: transparent;
+  border: none;
+  color: var(--text-color);
+  cursor: pointer;
+  padding: var(--spacing-xs);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--border-radius-md);
+  transition: all var(--transition-fast);
+}
+
+.close-button:hover {
+  background-color: var(--hover-background);
+}
+
+.close-button svg {
+  width: var(--icon-size-md);
+  height: var(--icon-size-md);
+}
+
+.export-modal-body {
+  padding: var(--spacing-md);
+  flex: 1;
+  overflow-y: auto;
+}
+
+.export-data-selection,
+.export-format-selection {
+  margin-bottom: var(--spacing-lg);
+}
+
+.section-title {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--spacing-md);
+}
+
+.section-title h3 {
+  margin: 0;
+  font-size: var(--font-size-md);
+  color: var(--text-color);
+}
+
+.selection-actions {
+  display: flex;
+  gap: var(--spacing-xs);
+}
+
+.selection-actions button {
+  background: transparent;
+  border: 1px solid var(--border-color);
+  color: var(--text-color);
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border-radius: var(--border-radius-sm);
+  font-size: var(--font-size-xs);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.selection-actions button:hover {
+  background-color: var(--hover-background);
+}
+
+.data-checkboxes {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: var(--spacing-md);
+}
+
+.checkbox-item {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.checkbox-item input[type="checkbox"] {
+  accent-color: var(--text-color);
+  width: 16px;
+  height: 16px;
+}
+
+.checkbox-item label {
+  color: var(--text-color);
+  cursor: pointer;
+  font-size: var(--font-size-sm);
+}
+
+.export-format-selection h3 {
+  margin: 0 0 var(--spacing-md) 0;
+  font-size: var(--font-size-md);
+  color: var(--text-color);
+}
+
+.format-options {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+}
+
+.format-option {
+  display: flex;
+  gap: var(--spacing-sm);
+  align-items: flex-start;
+}
+
+.format-option input[type="radio"] {
+  accent-color: var(--text-color);
+  margin-top: 4px;
+}
+
+.format-option label {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+  color: var(--text-color);
+  cursor: pointer;
+}
+
+.format-option label > span {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  font-weight: var(--font-weight-medium);
+  font-size: var(--font-size-sm);
+}
+
+.format-option svg {
+  width: var(--icon-size-md);
+  height: var(--icon-size-md);
+}
+
+.format-description {
+  margin: 0;
+  font-size: var(--font-size-xs);
+  color: var(--text-color);
+  opacity: 0.7;
+}
+
+.export-modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--spacing-md);
+  padding: var(--spacing-md);
+  border-top: 1px solid var(--border-color);
+}
+
+.cancel-button,
+.export-button {
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-radius: var(--border-radius-md);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.cancel-button {
+  background: transparent;
+  border: 1px solid var(--border-color);
+  color: var(--text-color);
+}
+
+.cancel-button:hover {
+  background-color: var(--hover-background);
+}
+
+.export-button {
+  background-color: var(--text-color);
+  color: var(--background-color);
+  border: none;
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.export-button svg {
+  width: var(--icon-size-sm);
+  height: var(--icon-size-sm);
+}
+
+.export-button:hover {
+  opacity: 0.9;
+}
+
+@media (max-width: 576px) {
+  .export-modal {
+    width: 95%;
+    max-height: 95vh;
+  }
+  
+  .data-checkboxes {
+    grid-template-columns: 1fr;
+  }
+  
+  .section-title {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--spacing-sm);
+  }
+  
+  .export-modal-footer {
+    flex-direction: column-reverse;
+  }
+  
+  .cancel-button,
+  .export-button {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+/* Các style riêng cho ExportDataModal */
+.export-modal-container {
+  max-width: 650px; /* Lớn hơn một chút so với modal mặc định */
+}
+
+.export-modal-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-lg);
+}
+
+.export-data-selection,
+.export-format-selection {
+  margin-bottom: var(--spacing-lg);
+}
+
+.section-title {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--spacing-md);
+}
+
+.section-title h3 {
+  margin: 0;
+  font-size: var(--font-size-md);
+  color: var(--text-color);
+}
+
+.selection-actions {
+  display: flex;
+  gap: var(--spacing-xs);
+}
+
+.selection-actions button {
+  background: transparent;
+  border: 1px solid var(--border-color);
+  color: var(--text-color);
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border-radius: var(--border-radius-sm);
+  font-size: var(--font-size-xs);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.selection-actions button:hover {
+  background-color: var(--hover-background);
+}
+
+.data-checkboxes {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: var(--spacing-md);
+}
+
+.checkbox-item {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.checkbox-item input[type="checkbox"] {
+  accent-color: var(--text-color);
+  width: 16px;
+  height: 16px;
+}
+
+.checkbox-item label {
+  color: var(--text-color);
+  cursor: pointer;
+  font-size: var(--font-size-sm);
+}
+
+.export-format-selection h3 {
+  margin: 0 0 var(--spacing-md) 0;
+  font-size: var(--font-size-md);
+  color: var(--text-color);
+}
+
+.format-options {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+}
+
+.format-option {
+  display: flex;
+  gap: var(--spacing-sm);
+  align-items: flex-start;
+}
+
+.format-option input[type="radio"] {
+  accent-color: var(--text-color);
+  margin-top: 4px;
+}
+
+.format-option label {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+  color: var(--text-color);
+  cursor: pointer;
+}
+
+.format-option label > span {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  font-weight: var(--font-weight-medium);
+  font-size: var(--font-size-sm);
+}
+
+.format-option svg {
+  width: var(--icon-size-md);
+  height: var(--icon-size-md);
+}
+
+.format-description {
+  margin: 0;
+  font-size: var(--font-size-xs);
+  color: var(--text-color);
+  opacity: 0.7;
+}
+
+/* Files List Button */
+.files-list-button {
+  margin-right: auto; /* Push to the left */
+  background-color: transparent;
+  border: 1px solid var(--border-color);
+  color: var(--text-color);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  padding: 6px 12px;
+  border-radius: var(--border-radius-md);
+  font-size: var(--font-size-xs);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.files-list-button svg {
+  width: 16px;
+  height: 16px;
+}
+
+.files-list-button:hover {
+  background-color: var(--hover-background);
+}
+
+/* Điều chỉnh kích thước nút cho phù hợp */
+.export-modal-container .modal-footer {
+  padding: 12px 16px;
+}
+
+.export-modal-container .modal-cancel-button,
+.export-modal-container .modal-confirm-button {
+  padding: 6px 10px;
+  font-size: var(--font-size-xs);
+}
+
+.export-modal-container .modal-confirm-button svg {
+  width: 16px;
+  height: 16px;
+}
+
+@media (max-width: 576px) {
+  .data-checkboxes {
+    grid-template-columns: 1fr;
+  }
+  
+  .section-title {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--spacing-sm);
+  }
+  
+  .export-modal-container .modal-footer {
+    flex-wrap: wrap;
+  }
+  
+  .files-list-button {
+    order: 3;
+    margin-right: 0;
+    margin-top: var(--spacing-xs);
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+/* PDF Export Options */
+.pdf-export-options {
+  margin-top: var(--spacing-md);
+  margin-left: var(--spacing-lg);
+  padding: var(--spacing-md);
+  border-left: 2px solid var(--border-color);
+}
+
+.pdf-export-options h4 {
+  margin: 0 0 var(--spacing-sm) 0;
+  font-size: var(--font-size-sm);
+  color: var(--text-color);
+  opacity: 0.9;
+}
+
+.pdf-option {
+  display: flex;
+  gap: var(--spacing-sm);
+  align-items: flex-start;
+  margin-bottom: var(--spacing-sm);
+}
+
+.pdf-option input[type="radio"] {
+  accent-color: var(--text-color);
+  margin-top: 4px;
+}
+
+.pdf-option label {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+  color: var(--text-color);
+  cursor: pointer;
+}
+
+.pdf-option label > span {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  font-weight: var(--font-weight-medium);
+  font-size: var(--font-size-sm);
+}
+
+.pdf-option svg {
+  width: var(--icon-size-sm);
+  height: var(--icon-size-sm);
+}
+
+/* Export Date Range */
+.export-date-range {
+  margin-bottom: var(--spacing-lg);
+  padding: var(--spacing-md);
+  background-color: var(--hover-background);
+  border-radius: var(--border-radius-md);
+  border: 1px solid var(--border-color);
+}
+
+.export-date-range .section-title h3 {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  margin-bottom: var(--spacing-md);
+  font-size: var(--font-size-md);
+  color: var(--text-color);
+}
+
+.export-date-range .section-title h3 svg {
+  width: var(--icon-size-sm);
+  height: var(--icon-size-sm);
+}
+
+.export-date-range .date-range-inputs {
+  display: flex;
+  gap: var(--spacing-md);
+  flex-wrap: wrap;
+  margin-bottom: var(--spacing-sm);
+}
+
+.export-date-range .date-input-group {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+}
+
+.export-date-range .date-input-group label {
+  color: var(--text-color);
+  font-size: var(--font-size-xs);
+  min-width: 40px;
+}
+
+.export-date-range .date-input-group input[type="date"] {
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-md);
+  background: var(--background-color);
+  color: var(--text-color);
+  font-size: var(--font-size-xs);
+}
+
+.export-date-range .date-input-group input[type="date"]:focus {
+  outline: none;
+  border-color: var(--text-color);
+}
+
+.export-date-range .date-error {
+  color: #ef4444;
+  font-size: var(--font-size-xs);
+  margin-bottom: var(--spacing-sm);
+}
+
+.export-date-range .date-range-note {
+  font-size: var(--font-size-xs);
+  color: var(--text-color);
+  opacity: 0.7;
+  margin-top: var(--spacing-xs);
+}
+
+/* Điều chỉnh giao diện cho màn hình nhỏ */
+@media (max-width: 576px) {
+  .export-date-range .date-range-inputs {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .export-date-range .date-input-group {
+    margin-bottom: var(--spacing-xs);
+  }
+}
+
+/* Chú thích về date range */
+.date-range-note {
+  margin-top: 10px;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+.date-range-note .date-range-sync,
+.date-range-note .date-range-custom {
+  margin-top: 5px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+}
+
+.date-range-note .date-range-sync {
+  color: var(--green-600);
+}
+
+.date-range-note .date-range-custom {
+  color: var(--blue-600);
+}
+
+.date-range-note .date-range-sync span,
+.date-range-note .date-range-custom span {
+  margin-right: 5px;
+  font-weight: bold;
+  font-size: 1rem;
+} 
